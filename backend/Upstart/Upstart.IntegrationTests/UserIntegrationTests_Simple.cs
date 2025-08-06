@@ -124,17 +124,7 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
             FirstName: "Jane",
             LastName: "Smith",
             Email: uniqueEmail,
-            PhoneNumber: "555-1234",
-            DateOfBirth: DateTime.Now.AddYears(-25),
-            SocialSecurityNumber: "123-45-6789",
-            AddressLine1: "123 Main St",
-            AddressLine2: null,
-            City: "Springfield",
-            State: "CA",
-            ZipCode: "12345",
-            AnnualIncome: 50000m,
-            EmploymentStatus: "Full-time",
-            CreditScore: 700
+            PhoneNumber: "555-1234"
         );
 
         // Act

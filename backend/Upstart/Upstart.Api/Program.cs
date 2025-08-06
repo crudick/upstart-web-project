@@ -34,6 +34,13 @@ try
     builder.Host.UseSerilog((context, configuration) =>
     {
         configuration.ReadFrom.Configuration(context.Configuration);
+        
+        // Add Datadog sink if API key is provided
+        var datadogApiKey = Environment.GetEnvironmentVariable("DATADOG_API_KEY");
+        if (!string.IsNullOrEmpty(datadogApiKey))
+        {
+            configuration.WriteTo.DatadogLogs(datadogApiKey);
+        }
     });
 
     // Add services to the container.
