@@ -10,16 +10,9 @@ public class TestDbContext : DbContext
     }
 
     public DbSet<UserEntity> Users { get; set; }
-    public DbSet<LoanEntity> Loans { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
-        // Configure entity relationships
-        modelBuilder.Entity<LoanEntity>()
-            .HasOne(l => l.User)
-            .WithMany(u => u.Loans)
-            .HasForeignKey(l => l.UserId);
     }
 }

@@ -1,11 +1,15 @@
+using System.Text;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Serilog.Events;
 using Upstart.Api.Endpoints;
 using Upstart.Api.Mapping;
 using Upstart.Api.Middleware;
 using Upstart.Api.Validators;
+using Upstart.Application.Interfaces;
 using Upstart.Application.Services;
 using Upstart.Domain.Interfaces;
 using Upstart.Persistence.Data;
@@ -55,8 +59,11 @@ try
     });
 
     // Add Services
-    builder.Services.AddScoped<UserService>();
-    builder.Services.AddScoped<LoanService>();
+    builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<IPollService, PollService>();
+    builder.Services.AddScoped<IPollAnswerService, PollAnswerService>();
+    builder.Services.AddScoped<IPollStatService, PollStatService>();
+    builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 
     // Add Entity Framework
     builder.Services.AddDbContext<UpstartDbContext>(options =>
@@ -65,7 +72,35 @@ try
 
     // Add repositories
     builder.Services.AddScoped<IUsersRepository, UsersRepository>();
-    builder.Services.AddScoped<ILoansRepository, LoansRepository>();
+    builder.Services.AddScoped<IPollsRepository, PollsRepository>();
+    builder.Services.AddScoped<IPollAnswersRepository, PollAnswersRepository>();
+    builder.Services.AddScoped<IPollStatsRepository, PollStatsRepository>();
+
+    // Add JWT Authentication
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var secretKey = jwtSettings["SecretKey"];
+    
+    if (string.IsNullOrEmpty(secretKey))
+    {
+        throw new InvalidOperationException("JWT SecretKey is not configured in appsettings");
+    }
+
+    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(secretKey))
+            };
+        });
+
+    builder.Services.AddAuthorization();
 
     var app = builder.Build();
 
@@ -95,9 +130,15 @@ try
 
     app.UseHttpsRedirection();
 
+    app.UseAuthentication();
+    app.UseAuthorization();
+
     // Map endpoints
+    app.MapAuthEndpoints();
     app.MapUsersEndpoints();
-    app.MapLoansEndpoints();
+    app.MapPollsEndpoints();
+    app.MapPollAnswersEndpoints();
+    app.MapPollStatsEndpoints();
 
     Log.Information("Upstart API started successfully");
     app.Run();

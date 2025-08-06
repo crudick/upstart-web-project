@@ -1,6 +1,7 @@
 using AutoMapper;
 using FluentValidation;
 using Upstart.Api.Models;
+using Upstart.Application.Interfaces;
 using Upstart.Application.Services;
 
 namespace Upstart.Api.Endpoints;
@@ -18,7 +19,7 @@ public static class UsersEndpoint
             .Produces(400);
     }
 
-    private static async Task<IResult> CreateUser(CreateUserApiRequest request, UserService userService, IValidator<CreateUserApiRequest> validator, IMapper mapper, ILogger<UserService> logger)
+    private static async Task<IResult> CreateUser(CreateUserApiRequest request, IUserService userService, IValidator<CreateUserApiRequest> validator, IMapper mapper, ILogger<UserService> logger)
     {
         logger.LogInformation("Creating user with email: {Email}", request.Email);
 

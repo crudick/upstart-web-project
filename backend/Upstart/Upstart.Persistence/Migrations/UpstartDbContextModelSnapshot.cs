@@ -22,7 +22,7 @@ namespace Upstart.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Upstart.Persistence.Entitities.LoanEntity", b =>
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollAnswerEntity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -31,111 +31,138 @@ namespace Upstart.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal?>("APR")
-                        .HasColumnType("decimal(5,2)")
-                        .HasColumnName("apr");
-
-                    b.Property<DateTime>("ApplicationDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("application_date");
-
-                    b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("approval_date");
+                    b.Property<string>("AnswerText")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("answer_text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime?>("DisbursementDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("disbursement_date");
-
-                    b.Property<decimal>("InterestRate")
-                        .HasColumnType("decimal(5,2)")
-                        .HasColumnName("interest_rate");
-
-                    b.Property<decimal>("LateFees")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("late_fees");
-
-                    b.Property<decimal>("LoanAmount")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("loan_amount");
-
-                    b.Property<string>("LoanOfficerNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)")
-                        .HasColumnName("loan_officer_notes");
-
-                    b.Property<string>("LoanPurpose")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("loan_purpose");
-
-                    b.Property<string>("LoanStatus")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("loan_status");
-
-                    b.Property<DateTime?>("MaturityDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("maturity_date");
-
-                    b.Property<decimal>("MonthlyPayment")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("monthly_payment");
-
-                    b.Property<DateTime?>("NextPaymentDueDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("next_payment_due_date");
-
-                    b.Property<decimal>("OriginationFee")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("origination_fee");
-
-                    b.Property<decimal>("OutstandingBalance")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("outstanding_balance");
-
-                    b.Property<string>("PaymentFrequency")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("payment_frequency");
-
-                    b.Property<int>("TermMonths")
+                    b.Property<int>("DisplayOrder")
                         .HasColumnType("integer")
-                        .HasColumnName("term_months");
+                        .HasColumnName("display_order");
 
-                    b.Property<decimal>("TotalPaymentsMade")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("total_payments_made");
+                    b.Property<int>("PollId")
+                        .HasColumnType("integer")
+                        .HasColumnName("poll_id");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<int?>("UserEntityId")
+                    b.HasKey("Id")
+                        .HasName("pk_poll_answers");
+
+                    b.HasIndex("PollId")
+                        .HasDatabaseName("ix_poll_answers_poll_id");
+
+                    b.ToTable("poll_answers", (string)null);
+                });
+
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("user_entity_id");
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsMultipleChoice")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_multiple_choice");
+
+                    b.Property<string>("PollGuid")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("character varying(36)")
+                        .HasColumnName("poll_guid");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("question");
+
+                    b.Property<bool>("RequiresAuthentication")
+                        .HasColumnType("boolean")
+                        .HasColumnName("requires_authentication");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<int>("UserId")
                         .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_loans");
+                        .HasName("pk_polls");
 
-                    b.HasIndex("UserEntityId")
-                        .HasDatabaseName("ix_loans_user_entity_id");
+                    b.HasIndex("PollGuid")
+                        .IsUnique()
+                        .HasDatabaseName("ix_polls_poll_guid");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("ix_loans_user_id");
+                        .HasDatabaseName("ix_polls_user_id");
 
-                    b.ToTable("loans", (string)null);
+                    b.ToTable("polls", (string)null);
+                });
+
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollStatEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("PollAnswerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("poll_answer_id");
+
+                    b.Property<int>("PollId")
+                        .HasColumnType("integer")
+                        .HasColumnName("poll_id");
+
+                    b.Property<DateTime>("SelectedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("selected_at");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_poll_stats");
+
+                    b.HasIndex("PollAnswerId")
+                        .HasDatabaseName("ix_poll_stats_poll_answer_id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_poll_stats_user_id");
+
+                    b.HasIndex("PollId", "UserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_poll_stats_poll_id_user_id");
+
+                    b.ToTable("poll_stats", (string)null);
                 });
 
             modelBuilder.Entity("Upstart.Persistence.Entitities.UserEntity", b =>
@@ -147,47 +174,15 @@ namespace Upstart.Persistence.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AddressLine1")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("address_line_1");
-
-                    b.Property<string>("AddressLine2")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("address_line_2");
-
-                    b.Property<decimal?>("AnnualIncome")
-                        .HasColumnType("decimal(18,2)")
-                        .HasColumnName("annual_income");
-
-                    b.Property<string>("City")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("city");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
-
-                    b.Property<int?>("CreditScore")
-                        .HasColumnType("integer")
-                        .HasColumnName("credit_score");
-
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("date_of_birth");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("email");
-
-                    b.Property<string>("EmploymentStatus")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("employment_status");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -201,29 +196,20 @@ namespace Upstart.Persistence.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("last_name");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("password_hash");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)")
                         .HasColumnName("phone_number");
 
-                    b.Property<string>("SocialSecurityNumber")
-                        .HasMaxLength(11)
-                        .HasColumnType("character varying(11)")
-                        .HasColumnName("social_security_number");
-
-                    b.Property<string>("State")
-                        .HasMaxLength(2)
-                        .HasColumnType("character varying(2)")
-                        .HasColumnName("state");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
-
-                    b.Property<string>("ZipCode")
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)")
-                        .HasColumnName("zip_code");
 
                     b.HasKey("Id")
                         .HasName("pk_users");
@@ -235,26 +221,76 @@ namespace Upstart.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Upstart.Persistence.Entitities.LoanEntity", b =>
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollAnswerEntity", b =>
                 {
-                    b.HasOne("Upstart.Persistence.Entitities.UserEntity", null)
-                        .WithMany("Loans")
-                        .HasForeignKey("UserEntityId")
-                        .HasConstraintName("fk_loans_users_user_entity_id");
+                    b.HasOne("Upstart.Persistence.Entitities.PollEntity", "Poll")
+                        .WithMany("Answers")
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_poll_answers_polls_poll_id");
 
+                    b.Navigation("Poll");
+                });
+
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollEntity", b =>
+                {
                     b.HasOne("Upstart.Persistence.Entitities.UserEntity", "User")
-                        .WithMany()
+                        .WithMany("Polls")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_loans_users_user_id");
+                        .HasConstraintName("fk_polls_users_user_id");
 
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollStatEntity", b =>
+                {
+                    b.HasOne("Upstart.Persistence.Entitities.PollAnswerEntity", "PollAnswer")
+                        .WithMany("Stats")
+                        .HasForeignKey("PollAnswerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_poll_stats_poll_answers_poll_answer_id");
+
+                    b.HasOne("Upstart.Persistence.Entitities.PollEntity", "Poll")
+                        .WithMany("Stats")
+                        .HasForeignKey("PollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_poll_stats_polls_poll_id");
+
+                    b.HasOne("Upstart.Persistence.Entitities.UserEntity", "User")
+                        .WithMany("PollStats")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_poll_stats_users_user_id");
+
+                    b.Navigation("Poll");
+
+                    b.Navigation("PollAnswer");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollAnswerEntity", b =>
+                {
+                    b.Navigation("Stats");
+                });
+
+            modelBuilder.Entity("Upstart.Persistence.Entitities.PollEntity", b =>
+                {
+                    b.Navigation("Answers");
+
+                    b.Navigation("Stats");
+                });
+
             modelBuilder.Entity("Upstart.Persistence.Entitities.UserEntity", b =>
                 {
-                    b.Navigation("Loans");
+                    b.Navigation("PollStats");
+
+                    b.Navigation("Polls");
                 });
 #pragma warning restore 612, 618
         }

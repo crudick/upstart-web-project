@@ -10,7 +10,9 @@ public class UpstartDbContext : DbContext
     }
 
     public DbSet<UserEntity> Users { get; set; }
-    public DbSet<LoanEntity> Loans { get; set; }
+    public DbSet<PollEntity> Polls { get; set; }
+    public DbSet<PollAnswerEntity> PollAnswers { get; set; }
+    public DbSet<PollStatEntity> PollStats { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,39 +26,62 @@ public class UpstartDbContext : DbContext
             entity.Property(e => e.LastName).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(255);
             entity.Property(e => e.PhoneNumber).HasMaxLength(20);
-            entity.Property(e => e.SocialSecurityNumber).HasMaxLength(11);
-            entity.Property(e => e.AddressLine1).HasMaxLength(100);
-            entity.Property(e => e.AddressLine2).HasMaxLength(100);
-            entity.Property(e => e.City).HasMaxLength(50);
-            entity.Property(e => e.State).HasMaxLength(2);
-            entity.Property(e => e.ZipCode).HasMaxLength(10);
-            entity.Property(e => e.AnnualIncome).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.EmploymentStatus).HasMaxLength(50);
         });
 
-        // Configure LoanEntity
-        modelBuilder.Entity<LoanEntity>(entity =>
+        // Configure PollEntity
+        modelBuilder.Entity<PollEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.LoanAmount).HasColumnType("decimal(18,2)").IsRequired();
-            entity.Property(e => e.InterestRate).HasColumnType("decimal(5,2)").IsRequired();
-            entity.Property(e => e.MonthlyPayment).HasColumnType("decimal(18,2)").IsRequired();
-            entity.Property(e => e.LoanPurpose).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.LoanStatus).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.OutstandingBalance).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.TotalPaymentsMade).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.PaymentFrequency).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.LateFees).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.OriginationFee).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.APR).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.LoanOfficerNotes).HasMaxLength(1000);
-
+            entity.Property(e => e.PollGuid).IsRequired().HasMaxLength(36);
+            entity.HasIndex(e => e.PollGuid).IsUnique();
+            entity.Property(e => e.Question).IsRequired().HasMaxLength(500);
+            
             // Foreign key relationship
             entity.HasOne(e => e.User)
-                .WithMany()
+                .WithMany(u => u.Polls)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Configure PollAnswerEntity
+        modelBuilder.Entity<PollAnswerEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AnswerText).IsRequired().HasMaxLength(500);
+            
+            // Foreign key relationship
+            entity.HasOne(e => e.Poll)
+                .WithMany(p => p.Answers)
+                .HasForeignKey(e => e.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // Configure PollStatEntity
+        modelBuilder.Entity<PollStatEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            
+            // Foreign key relationships
+            entity.HasOne(e => e.Poll)
+                .WithMany(p => p.Stats)
+                .HasForeignKey(e => e.PollId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.PollAnswer)
+                .WithMany(pa => pa.Stats)
+                .HasForeignKey(e => e.PollAnswerId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.PollStats)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Unique constraint to prevent duplicate votes
+            entity.HasIndex(e => new { e.PollId, e.UserId })
+                .IsUnique();
         });
     }
 }
