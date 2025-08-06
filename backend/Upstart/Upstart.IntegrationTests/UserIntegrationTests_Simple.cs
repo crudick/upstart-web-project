@@ -34,17 +34,7 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
             FirstName: "John",
             LastName: "Doe",
             Email: "john.doe@example.com",
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
@@ -65,17 +55,7 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
             FirstName: "", // Invalid - required field
             LastName: "", // Invalid - required field  
             Email: "", // Invalid - required field
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
@@ -93,17 +73,7 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
             FirstName: "John",
             LastName: "Doe",
             Email: "invalid-email-format", // Invalid email format
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
