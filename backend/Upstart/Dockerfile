@@ -5,12 +5,12 @@ ENV ASPNETCORE_URLS=http://+:5000
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
-COPY ["backend/Upstart/Upstart.Api/Upstart.Api.csproj", "Upstart.Api/"]
-COPY ["backend/Upstart/Upstart.Application/Upstart.Application.csproj", "Upstart.Application/"]
-COPY ["backend/Upstart/Upstart.Domain/Upstart.Domain.csproj", "Upstart.Domain/"]
-COPY ["backend/Upstart/Upstart.Persistence/Upstart.Persistence.csproj", "Upstart.Persistence/"]
+COPY ["Upstart.Api/Upstart.Api.csproj", "Upstart.Api/"]
+COPY ["Upstart.Application/Upstart.Application.csproj", "Upstart.Application/"]
+COPY ["Upstart.Domain/Upstart.Domain.csproj", "Upstart.Domain/"]
+COPY ["Upstart.Persistence/Upstart.Persistence.csproj", "Upstart.Persistence/"]
 RUN dotnet restore "Upstart.Api/Upstart.Api.csproj"
-COPY backend/Upstart/ .
+COPY . .
 WORKDIR "/src/Upstart.Api"
 RUN dotnet build "Upstart.Api.csproj" -c Release -o /app/build
 
