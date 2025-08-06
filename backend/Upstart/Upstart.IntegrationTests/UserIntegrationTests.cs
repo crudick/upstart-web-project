@@ -62,8 +62,6 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
         createdUser.LastName.Should().Be(validRequest.LastName);
         createdUser.Email.Should().Be(validRequest.Email);
         createdUser.PhoneNumber.Should().Be(validRequest.PhoneNumber);
-        createdUser.AnnualIncome.Should().Be(validRequest.AnnualIncome);
-        createdUser.CreditScore.Should().Be(validRequest.CreditScore);
         createdUser.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
         createdUser.UpdatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromMinutes(1));
     }
@@ -126,17 +124,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
             FirstName: "Jane",
             LastName: "Smith",
             Email: "jane.smith@example.com",
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
@@ -161,17 +149,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
             FirstName: invalidFirstName,
             LastName: "Doe",
             Email: "test@example.com",
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
@@ -195,17 +173,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
             FirstName: "John",
             LastName: invalidLastName,
             Email: "test@example.com",
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
@@ -232,17 +200,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
             FirstName: "John",
             LastName: "Doe",
             Email: invalidEmail,
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: null
+            PhoneNumber: null
         );
 
         // Act
@@ -253,69 +211,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
         await _steps.ThenTheResponseShouldContainValidationError("Email");
     }
 
-    [Fact]
-    public async Task PostUsers_WithNegativeAnnualIncome_ShouldReturn400()
-    {
-        // Arrange
-        _steps.GivenNoUsersExist();
 
-        var invalidRequest = new CreateUserApiRequest(
-            FirstName: "John",
-            LastName: "Doe",
-            Email: "john@example.com",
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: -1000m, // Invalid negative income
-            EmploymentStatus: null,
-            CreditScore: null
-        );
-
-        // Act
-        await _steps.WhenIPostToUsersEndpoint(invalidRequest);
-
-        // Assert
-        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.BadRequest);
-        await _steps.ThenTheResponseShouldContainValidationError("AnnualIncome");
-    }
-
-    [Theory]
-    [InlineData(299)] // Below minimum
-    [InlineData(851)] // Above maximum
-    public async Task PostUsers_WithInvalidCreditScore_ShouldReturn400(int invalidCreditScore)
-    {
-        // Arrange
-        _steps.GivenNoUsersExist();
-
-        var invalidRequest = new CreateUserApiRequest(
-            FirstName: "John",
-            LastName: "Doe",
-            Email: "john@example.com",
-            PhoneNumber: null,
-            DateOfBirth: null,
-            SocialSecurityNumber: null,
-            AddressLine1: null,
-            AddressLine2: null,
-            City: null,
-            State: null,
-            ZipCode: null,
-            AnnualIncome: null,
-            EmploymentStatus: null,
-            CreditScore: invalidCreditScore
-        );
-
-        // Act
-        await _steps.WhenIPostToUsersEndpoint(invalidRequest);
-
-        // Assert
-        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.BadRequest);
-        await _steps.ThenTheResponseShouldContainValidationError("CreditScore");
-    }
 
     [Fact]
     public async Task PostUsers_MultipleValidRequests_ShouldCreateMultipleUsers()
@@ -325,9 +221,9 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
 
         var requests = new[]
         {
-            new CreateUserApiRequest("John", "Doe", "john@example.com", null, null, null, null, null, null, null, null, null, null, null),
-            new CreateUserApiRequest("Jane", "Smith", "jane@example.com", null, null, null, null, null, null, null, null, null, null, null),
-            new CreateUserApiRequest("Bob", "Johnson", "bob@example.com", null, null, null, null, null, null, null, null, null, null, null)
+            new CreateUserApiRequest("John", "Doe", "john@example.com", null),
+            new CreateUserApiRequest("Jane", "Smith", "jane@example.com", null),
+            new CreateUserApiRequest("Bob", "Johnson", "bob@example.com", null)
         };
 
         // Act

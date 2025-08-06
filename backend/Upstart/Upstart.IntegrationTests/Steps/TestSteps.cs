@@ -64,17 +64,7 @@ public class TestSteps
             FirstName: "John",
             LastName: "Doe",
             Email: "john.doe@example.com",
-            PhoneNumber: "555-1234",
-            DateOfBirth: DateTime.Now.AddYears(-30),
-            SocialSecurityNumber: "123-45-6789",
-            AddressLine1: "123 Main St",
-            AddressLine2: "Apt 4B",
-            City: "Anytown",
-            State: "CA",
-            ZipCode: "12345",
-            AnnualIncome: 75000m,
-            EmploymentStatus: "Full-time",
-            CreditScore: 720
+            PhoneNumber: "555-1234"
         );
         return this;
     }
@@ -87,49 +77,19 @@ public class TestSteps
                 FirstName: "",
                 LastName: "",
                 Email: "",
-                PhoneNumber: null,
-                DateOfBirth: null,
-                SocialSecurityNumber: null,
-                AddressLine1: null,
-                AddressLine2: null,
-                City: null,
-                State: null,
-                ZipCode: null,
-                AnnualIncome: null,
-                EmploymentStatus: null,
-                CreditScore: null
+                PhoneNumber: null
             ),
             "invalid email" => new CreateUserApiRequest(
                 FirstName: "John",
                 LastName: "Doe",
                 Email: "invalid-email",
-                PhoneNumber: null,
-                DateOfBirth: null,
-                SocialSecurityNumber: null,
-                AddressLine1: null,
-                AddressLine2: null,
-                City: null,
-                State: null,
-                ZipCode: null,
-                AnnualIncome: null,
-                EmploymentStatus: null,
-                CreditScore: null
+                PhoneNumber: null
             ),
             "duplicate email" => new CreateUserApiRequest(
                 FirstName: "Jane",
                 LastName: "Smith",
                 Email: "john.doe@example.com",
-                PhoneNumber: null,
-                DateOfBirth: null,
-                SocialSecurityNumber: null,
-                AddressLine1: null,
-                AddressLine2: null,
-                City: null,
-                State: null,
-                ZipCode: null,
-                AnnualIncome: null,
-                EmploymentStatus: null,
-                CreditScore: null
+                PhoneNumber: null
             ),
             _ => throw new ArgumentException($"Unknown validation error type: {validationError}")
         };
