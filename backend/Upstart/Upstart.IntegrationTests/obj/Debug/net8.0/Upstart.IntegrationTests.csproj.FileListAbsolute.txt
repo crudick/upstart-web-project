@@ -436,3 +436,4 @@
 /Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.IntegrationTests/obj/Debug/net8.0/Upstart.IntegrationTests.pdb
 /Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.IntegrationTests/obj/Debug/net8.0/Upstart.IntegrationTests.genruntimeconfig.cache
 /Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.IntegrationTests/obj/Debug/net8.0/ref/Upstart.IntegrationTests.dll
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.IntegrationTests/obj/Debug/net8.0/Upstart.IntegrationTests.sourcelink.json

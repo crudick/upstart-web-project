@@ -118,7 +118,7 @@ public class TestSteps
             "duplicate email" => new CreateUserApiRequest(
                 FirstName: "Jane",
                 LastName: "Smith",
-                Email: "john.doe@example.com", // This should already exist from previous test setup
+                Email: "john.doe@example.com",
                 PhoneNumber: null,
                 DateOfBirth: null,
                 SocialSecurityNumber: null,

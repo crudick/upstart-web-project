@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Upstart.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e833da79c74f38000ac73c53dceee6f5b169bc2")]
 [assembly: System.Reflection.AssemblyProductAttribute("Upstart.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Upstart.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

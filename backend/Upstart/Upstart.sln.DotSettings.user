@@ -4,5 +4,6 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=85305136_002D3991_002D485b_002D90da_002D7628945f3fb4/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="UserIntegrationTests_Simple" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.UserIntegrationTests_Simple&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.UserIntegrationTests.PostUsers_WithDuplicateEmail_ShouldReturn400&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

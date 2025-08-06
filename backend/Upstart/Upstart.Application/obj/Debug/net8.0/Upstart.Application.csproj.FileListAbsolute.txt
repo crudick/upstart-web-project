@@ -13,3 +13,4 @@
 /Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/refint/Upstart.Application.dll
 /Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.pdb
 /Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/ref/Upstart.Application.dll
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.sourcelink.json

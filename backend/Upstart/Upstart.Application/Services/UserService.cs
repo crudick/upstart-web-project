@@ -19,6 +19,14 @@ public class UserService : IUserService
     public async Task<UserModel> CreateUserAsync(CreateUserRequest request, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Creating {user}", request);
+        
+        // Check if user with this email already exists
+        var existingUser = await _usersRepository.GetByEmailAsync(request.Email);
+        if (existingUser != null)
+        {
+            throw new InvalidOperationException($"User with email '{request.Email}' already exists.");
+        }
+        
         var user = new UserModel
         {
             FirstName = request.FirstName,
