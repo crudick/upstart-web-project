@@ -13,7 +13,7 @@ namespace Upstart.IntegrationTests.Steps;
 public class TestSteps
 {
     private readonly HttpClient _httpClient;
-    
+
     private readonly TestWebApplicationFactory<Program> _factory;
     private HttpResponseMessage? _lastResponse;
     private readonly JsonSerializerOptions _jsonOptions;
@@ -43,7 +43,7 @@ public class TestSteps
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<UpstartDbContext>();
-        
+
         var user = new UserEntity
         {
             FirstName = firstName,
@@ -52,7 +52,7 @@ public class TestSteps
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-        
+
         context.Users.Add(user);
         context.SaveChanges();
         return this;
@@ -183,7 +183,7 @@ public class TestSteps
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<UpstartDbContext>();
-        
+
         var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
         user.Should().NotBeNull($"User with email {email} should exist in database");
         return this;

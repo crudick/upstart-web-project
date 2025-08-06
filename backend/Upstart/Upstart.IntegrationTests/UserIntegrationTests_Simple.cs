@@ -32,7 +32,7 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
         // Arrange - TDD Red Phase: Create a failing test first
         var validUserRequest = new CreateUserApiRequest(
             FirstName: "John",
-            LastName: "Doe", 
+            LastName: "Doe",
             Email: "john.doe@example.com",
             PhoneNumber: null,
             DateOfBirth: null,
@@ -52,7 +52,7 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
 
         // Assert - TDD Green Phase: Verify the test passes with implementation
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        
+
         var responseContent = await response.Content.ReadAsStringAsync();
         responseContent.Should().Contain("john.doe@example.com");
     }
@@ -148,16 +148,16 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
         // Assert - Verify user was created in database using factory's GetDbContext method
         // Wait a moment to ensure async operations complete
         await Task.Delay(100);
-        
+
         using var context = _factory.GetDbContext();
-        
+
         // Force Entity Framework to reload data from database
         context.ChangeTracker.Clear();
-        
+
         // Debug: Check total user count
         var totalUsers = await context.Users.CountAsync();
         var allUsers = await context.Users.ToListAsync();
-        
+
         var createdUser = await context.Users.FirstOrDefaultAsync(u => u.Email == uniqueEmail);
         createdUser.Should().NotBeNull($"User should be created in database. Total users: {totalUsers}. All emails: {string.Join(", ", allUsers.Select(u => u.Email))}");
         createdUser!.FirstName.Should().Be(userRequest.FirstName);

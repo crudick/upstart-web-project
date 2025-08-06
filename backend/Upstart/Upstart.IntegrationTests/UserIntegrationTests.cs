@@ -52,12 +52,12 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
         responseContent.Should().Contain(validRequest.FirstName);
         responseContent.Should().Contain(validRequest.LastName);
         responseContent.Should().Contain(validRequest.Email);
-        
+
         // Verify in database
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<UpstartDbContext>();
         var createdUser = context.Users.First(u => u.Email == validRequest.Email);
-        
+
         createdUser.FirstName.Should().Be(validRequest.FirstName);
         createdUser.LastName.Should().Be(validRequest.LastName);
         createdUser.Email.Should().Be(validRequest.Email);
@@ -121,7 +121,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     {
         // Arrange - Test minimal valid request
         _steps.GivenNoUsersExist();
-        
+
         var minimalRequest = new CreateUserApiRequest(
             FirstName: "Jane",
             LastName: "Smith",
@@ -156,7 +156,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     {
         // Arrange
         _steps.GivenNoUsersExist();
-        
+
         var invalidRequest = new CreateUserApiRequest(
             FirstName: invalidFirstName,
             LastName: "Doe",
@@ -190,7 +190,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     {
         // Arrange
         _steps.GivenNoUsersExist();
-        
+
         var invalidRequest = new CreateUserApiRequest(
             FirstName: "John",
             LastName: invalidLastName,
@@ -227,7 +227,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     {
         // Arrange
         _steps.GivenNoUsersExist();
-        
+
         var invalidRequest = new CreateUserApiRequest(
             FirstName: "John",
             LastName: "Doe",
@@ -258,7 +258,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     {
         // Arrange
         _steps.GivenNoUsersExist();
-        
+
         var invalidRequest = new CreateUserApiRequest(
             FirstName: "John",
             LastName: "Doe",
@@ -291,7 +291,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     {
         // Arrange
         _steps.GivenNoUsersExist();
-        
+
         var invalidRequest = new CreateUserApiRequest(
             FirstName: "John",
             LastName: "Doe",
@@ -337,7 +337,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
         // Assert - Verify all users were created
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<UpstartDbContext>();
-        
+
         var userCount = context.Users.Count();
         userCount.Should().Be(3);
 

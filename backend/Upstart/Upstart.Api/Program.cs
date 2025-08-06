@@ -23,81 +23,81 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("Starting Upstart API");
-    
+
     var builder = WebApplication.CreateBuilder(args);
-    
+
     // Use Serilog for logging - configuration comes from appsettings
     builder.Host.UseSerilog((context, configuration) =>
     {
         configuration.ReadFrom.Configuration(context.Configuration);
     });
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+    // Add services to the container.
+    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
 
-// Add AutoMapper
-builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+    // Add AutoMapper
+    builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
-// Add FluentValidation
-builder.Services.AddValidatorsFromAssemblyContaining<CreateUserApiRequestValidator>();
+    // Add FluentValidation
+    builder.Services.AddValidatorsFromAssemblyContaining<CreateUserApiRequestValidator>();
 
-// Add CORS
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowReactApp", policy =>
+    // Add CORS
+    builder.Services.AddCors(options =>
     {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        options.AddPolicy("AllowReactApp", policy =>
+        {
+            policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
     });
-});
 
-// Add Services
-builder.Services.AddScoped<UserService>();
-builder.Services.AddScoped<LoanService>();
+    // Add Services
+    builder.Services.AddScoped<UserService>();
+    builder.Services.AddScoped<LoanService>();
 
-// Add Entity Framework
-builder.Services.AddDbContext<UpstartDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("UpstartDb"))
-           .UseSnakeCaseNamingConvention());
+    // Add Entity Framework
+    builder.Services.AddDbContext<UpstartDbContext>(options =>
+        options.UseNpgsql(builder.Configuration.GetConnectionString("UpstartDb"))
+               .UseSnakeCaseNamingConvention());
 
-// Add repositories
-builder.Services.AddScoped<IUsersRepository, UsersRepository>();
-builder.Services.AddScoped<ILoansRepository, LoansRepository>();
+    // Add repositories
+    builder.Services.AddScoped<IUsersRepository, UsersRepository>();
+    builder.Services.AddScoped<ILoansRepository, LoansRepository>();
 
-var app = builder.Build();
+    var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseMiddleware<GlobalExceptionMiddleware>();
-
-// Add Serilog request logging
-app.UseSerilogRequestLogging(options =>
-{
-    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
-    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    // Configure the HTTP request pipeline.
+    if (app.Environment.IsDevelopment())
     {
-        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
-        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
-        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.FirstOrDefault());
-        diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString());
-    };
-});
+        app.UseSwagger();
+        app.UseSwaggerUI();
+    }
 
-app.UseCors("AllowReactApp");
+    app.UseMiddleware<GlobalExceptionMiddleware>();
 
-app.UseHttpsRedirection();
+    // Add Serilog request logging
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+            diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+            diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.FirstOrDefault());
+            diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString());
+        };
+    });
 
-// Map endpoints
-app.MapUsersEndpoints();
-app.MapLoansEndpoints();
+    app.UseCors("AllowReactApp");
+
+    app.UseHttpsRedirection();
+
+    // Map endpoints
+    app.MapUsersEndpoints();
+    app.MapLoansEndpoints();
 
     Log.Information("Upstart API started successfully");
     app.Run();
