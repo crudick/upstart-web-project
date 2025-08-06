@@ -30,7 +30,7 @@ public class GlobalExceptionMiddleware
     private static async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/json";
-        
+
         var (statusCode, message) = exception switch
         {
             ArgumentException => (HttpStatusCode.BadRequest, "Invalid request parameters"),
