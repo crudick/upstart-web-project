@@ -1,6 +1,26 @@
-# Upstart Web Project
+# UpPoll - Modern Polling Platform
 
-A full-stack web application for managing users and loans. Built with .NET 8 minimal APIs, React, and TypeScript.
+A full-stack web application for creating, sharing, and analyzing polls. Built with .NET 8 minimal APIs, React, TypeScript, and modern UI components.
+
+## What is UpPoll?
+
+UpPoll is a modern polling platform that allows users to create engaging polls, share them with their audience, and view real-time results. Whether you're gathering feedback, making group decisions, or conducting market research, UpPoll provides the tools you need.
+
+## Features
+
+### For Unauthenticated Users
+- **Browse Public Polls**: View and participate in publicly available polls
+- **Vote on Polls**: Cast votes on any public poll without needing an account
+- **View Results**: See real-time poll results and analytics
+- **Responsive Design**: Access polls from any device
+
+### For Authenticated Users
+- **Create Polls**: Design custom polls with multiple choice questions
+- **Manage Polls**: Edit, delete, or update your existing polls
+- **Privacy Controls**: Make polls public or private
+- **Dashboard Analytics**: View detailed statistics on poll performance
+- **User Management**: Secure account registration and authentication
+- **Poll History**: Track all your created polls in one place
 
 ## Architecture
 
@@ -11,15 +31,33 @@ A full-stack web application for managing users and loans. Built with .NET 8 min
 - **Upstart.Persistence**: Entity Framework Core with database entities
 
 ### Frontend (React + TypeScript)
-- **Create React App**: Standard React development setup
+- **React 18**: Modern React with hooks and functional components
 - **TypeScript**: Type-safe development
-- **Fetch API**: HTTP client for API communication
-- **CSS**: Custom styling for responsive design
+- **Tailwind CSS**: Utility-first CSS framework
+- **Framer Motion**: Smooth animations and transitions
+- **Heroicons**: Beautiful SVG icons
+- **Context API**: State management for authentication
 
 ## API Endpoints
 
+### Authentication
+- `POST /api/auth/register` - Register a new user account
+- `POST /api/auth/login` - Authenticate and login user
+
+### Users
 - `POST /api/users` - Create a new user
-- `POST /api/loans` - Create a new loan
+- `GET /api/users/{id}` - Get user details
+
+### Polls
+- `GET /api/polls` - Get all public polls
+- `POST /api/polls` - Create a new poll (authenticated)
+- `GET /api/polls/{guid}` - Get specific poll details
+- `PUT /api/polls/{guid}` - Update poll (authenticated, owner only)
+- `DELETE /api/polls/{guid}` - Delete poll (authenticated, owner only)
+
+### Poll Answers
+- `POST /api/polls/{pollId}/answers` - Submit a poll response
+- `GET /api/polls/{pollId}/stats` - Get poll statistics
 
 ## Quick Start
 
@@ -69,8 +107,8 @@ A full-stack web application for managing users and loans. Built with .NET 8 min
 
 3. **Access the Application:**
    - Open your browser to http://localhost:3000
-   - Use the navigation buttons to switch between "Create User" and "Create Loan" forms
-   - Fill out the forms and submit to create users and loans via the API
+   - Browse public polls or create an account to start creating your own polls
+   - Use the dashboard to manage your polls and view analytics
 
 ## Project Structure
 
@@ -84,13 +122,16 @@ upstart-web-project/
 │       └── Upstart.Persistence/   # Data access layer
 ├── frontend/
 │   ├── src/
-│   │   ├── components/    # React form components
-│   │   │   ├── CreateUserForm.tsx
-│   │   │   └── CreateLoanForm.tsx
+│   │   ├── components/    # React components
+│   │   │   ├── auth/      # Authentication forms
+│   │   │   ├── layout/    # Layout components
+│   │   │   ├── pages/     # Page components
+│   │   │   ├── poll/      # Poll-specific components
+│   │   │   └── ui/        # Reusable UI components
+│   │   ├── contexts/      # React context providers
 │   │   ├── services/      # API client functions
-│   │   │   └── api.ts
-│   │   ├── App.tsx        # Main application component
-│   │   └── App.css        # Application styles
+│   │   ├── types/         # TypeScript type definitions
+│   │   └── App.tsx        # Main application component
 │   └── public/            # Static assets
 ├── docker-compose.yml     # Docker services configuration
 └── README.md
@@ -100,46 +141,53 @@ upstart-web-project/
 
 ### User Data Model
 ```typescript
-interface CreateUserRequest {
+interface User {
+  id: string;
   firstName: string;
   lastName: string;
   email: string;
   phoneNumber?: string;
-  dateOfBirth?: string;
-  socialSecurityNumber?: string;
-  addressLine1?: string;
-  addressLine2?: string;
-  city?: string;
-  state?: string;
-  zipCode?: string;
-  annualIncome?: number;
-  employmentStatus?: string;
-  creditScore?: number;
+  createdAt: string;
+}
+
+interface RegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phoneNumber?: string;
 }
 ```
 
-### Loan Data Model
+### Poll Data Model
 ```typescript
-interface CreateLoanRequest {
-  userId: number;
-  loanAmount: number;
-  interestRate: number;
-  termMonths: number;
-  monthlyPayment: number;
-  loanPurpose: string;
-  loanStatus: string;
-  applicationDate: string;
-  approvalDate?: string;
-  disbursementDate?: string;
-  maturityDate?: string;
-  outstandingBalance: number;
-  totalPaymentsMade: number;
-  nextPaymentDueDate?: string;
-  paymentFrequency: string;
-  lateFees: number;
-  originationFee: number;
-  apr?: number;
-  loanOfficerNotes?: string;
+interface Poll {
+  id: string;
+  guid: string;
+  title: string;
+  description?: string;
+  isPublic: boolean;
+  allowMultipleVotes: boolean;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  answers: PollAnswer[];
+}
+
+interface PollAnswer {
+  id: string;
+  text: string;
+  pollId: string;
+  voteCount: number;
+}
+```
+
+### Poll Statistics
+```typescript
+interface PollStat {
+  pollAnswerId: string;
+  voteCount: number;
+  percentage: number;
 }
 ```
 
@@ -148,14 +196,16 @@ interface CreateLoanRequest {
 ### Frontend Configuration
 - The frontend expects the backend API to run on `https://localhost:5166`
 - You can change the API URL by setting the `REACT_APP_API_URL` environment variable
-- Forms are designed to be simple and easily modifiable for learning purposes
+- Uses Tailwind CSS for styling with custom design system
+- Responsive design optimized for mobile and desktop
 
 ### Backend Development
-- Uses Entity Framework Core with database
+- Uses Entity Framework Core with PostgreSQL database
 - Minimal APIs for lightweight endpoints
 - FluentValidation for request validation
 - AutoMapper for object mapping
 - Serilog for structured logging with Seq integration
+- JWT-based authentication for secure API access
 
 ## Database Migrations
 
@@ -208,20 +258,6 @@ flyway info
 flyway info
 ```
 
-#### Option 3: Using Flyway Docker Image
-
-If you have Docker but want to run migrations manually:
-
-```bash
-# Run migrations using Flyway Docker image
-docker run --rm \
-  --network host \
-  -v $(pwd)/flyway/upstart:/flyway/conf \
-  -v $(pwd)/flyway/upstart/migrations:/flyway/sql \
-  flyway/flyway:latest \
-  -configFiles=/flyway/conf/flyway.conf migrate
-```
-
 ### Database Configuration
 
 - **Database**: UpstartDb
@@ -230,70 +266,22 @@ docker run --rm \
 - **User**: postgres
 - **Password**: postgres
 
-### Migration Files
+## Authentication & Security
 
-Migration files follow Flyway naming conventions:
-- `V{version}__{description}.sql` for versioned migrations
-- Example: `V1__InitialCreate.sql`, `V2__AddUserTable.sql`
+### JWT Authentication
+- Secure token-based authentication
+- Tokens expire after 24 hours
+- Refresh token mechanism for seamless user experience
 
-### Creating New Migrations
+### Password Security
+- Passwords are hashed using secure algorithms
+- Minimum password requirements enforced
+- Account lockout protection against brute force attacks
 
-#### From Entity Framework Changes
-
-Use the provided script to convert EF migrations to Flyway:
-
-```bash
-cd scripts
-./ef-to-flyway.sh -n "YourMigrationName"
-```
-
-This script will:
-1. Generate an Entity Framework migration
-2. Convert it to a Flyway SQL file
-3. Place it in the `flyway/upstart/migrations/` directory
-4. Optionally remove the EF migration files
-
-#### Manual SQL Migrations
-
-Create new migration files directly in `flyway/upstart/migrations/`:
-
-```sql
--- V2__AddLoanTable.sql
-CREATE TABLE loans (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    amount DECIMAL(15,2) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
-```
-
-### Migration Best Practices
-
-1. **Always backup** your database before running migrations in production
-2. **Test migrations** in a development environment first
-3. **Use descriptive names** for migration files
-4. **Keep migrations small** and focused on one change
-5. **Never modify** existing migration files after they've been applied
-6. **Use transactions** when possible for atomic changes
-
-### Troubleshooting
-
-#### View Migration History
-```bash
-cd flyway/upstart
-flyway info
-```
-
-#### Repair Migration History (if needed)
-```bash
-flyway repair
-```
-
-#### Clean Database (Development Only - DESTRUCTIVE)
-```bash
-flyway clean  # Removes all database objects
-```
+### API Security
+- CORS configured for frontend domain
+- Request validation and sanitization
+- Rate limiting on sensitive endpoints
 
 ## Logging with Serilog, Seq, and Datadog
 
@@ -322,118 +310,58 @@ docker-compose up --build
 docker-compose up postgres seq
 ```
 
-#### Option 2: Standalone Seq
-
-Run Seq independently:
-
-```bash
-# Run Seq in Docker
-docker run -d \
-  --name seq \
-  -e ACCEPT_EULA=Y \
-  -p 5341:80 \
-  -v seq-data:/data \
-  datalust/seq:latest
-```
-
-### Log Configuration
-
-The application is configured to send logs to both console and Seq:
-
-- **Console**: Formatted output for development debugging
-- **Seq**: Structured logs for analysis and searching
-- **Log Levels**: Information and above (Debug in Development)
-
 ### Log Structure
 
 The application captures:
 
 - **HTTP Requests**: Method, path, status code, response time, client IP, user agent
-- **User Operations**: User creation, validation errors, business logic events
+- **User Operations**: Registration, login, poll creation, voting events
+- **Poll Analytics**: Vote submissions, poll views, engagement metrics
 - **System Events**: Application startup, shutdown, errors
 - **Performance**: Request duration, database operations
 
-### Example Log Queries in Seq
+## UI Components & Design System
 
-Once you have logs flowing to Seq, you can use these queries:
+### Design Principles
+- **Modern & Clean**: Minimalist design focused on usability
+- **Responsive**: Works seamlessly across all device sizes
+- **Accessible**: WCAG-compliant components with proper ARIA labels
+- **Consistent**: Unified color palette and typography system
 
-```sql
--- All user creation events
-RequestPath like '/api/users' and RequestMethod = 'POST'
+### Custom Components
+- **Button**: Multiple variants (primary, secondary, outline, ghost)
+- **Input**: Form inputs with icons and validation states
+- **Card**: Content containers with consistent styling
+- **Poll Components**: Specialized components for poll display and interaction
 
--- Failed requests (4xx/5xx status codes)
-StatusCode >= 400
+### Color System
+- **Primary**: Upstart brand colors for CTAs and highlights
+- **Secondary**: Supporting colors for less prominent actions
+- **Neutral**: Grays for text, borders, and backgrounds
+- **Semantic**: Success, warning, and error states
 
--- Slow requests (over 1 second)
-Elapsed > 1000
+## Deployment
 
--- User validation failures
-@mt like '%validation failed%'
+### Production Considerations
+- Environment-specific configuration files
+- Database connection string security
+- HTTPS enforcement
+- Static file caching and CDN integration
+- Performance monitoring and alerting
 
--- Requests from a specific IP
-ClientIP = '127.0.0.1'
-```
+### Docker Support
+- Multi-stage Docker builds for optimized production images
+- Docker Compose for local development environment
+- Health checks for service reliability
 
-### Log Enrichment
+## Contributing
 
-Logs are automatically enriched with:
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-- **Environment**: Development, Production, etc.
-- **Machine Name**: Host machine identifier
-- **Thread ID**: Thread processing the request
-- **Process ID**: Application process identifier
-- **Request Context**: HTTP method, path, status, timing
+## License
 
-### Configuration Files
-
-#### appsettings.json
-```json
-{
-  "Serilog": {
-    "WriteTo": [
-      {
-        "Name": "Seq",
-        "Args": {
-          "serverUrl": "http://localhost:5341"
-        }
-      }
-    ]
-  }
-}
-```
-
-#### appsettings.Development.json
-- Debug level logging enabled
-- Enhanced console output
-- Development-specific Seq configuration
-
-### Troubleshooting Logging
-
-#### Seq Not Receiving Logs
-1. Verify Seq is running: http://localhost:5341
-2. Check application logs for Serilog connection errors
-3. Verify firewall settings for port 5341
-
-#### Console Logs Only
-- Check Seq URL configuration in appsettings
-- Verify Seq container is healthy: `docker ps`
-- Check Docker network connectivity
-
-#### Performance Impact
-- Seq logging is asynchronous and shouldn't impact performance
-- Log levels can be adjusted per namespace in appsettings
-- Consider log retention policies for production
-
-### Frontend Development
-- TypeScript for type safety
-- Component-based architecture with React hooks
-- Custom CSS for styling (no external UI libraries)
-- Fetch API for HTTP requests
-
-### Form Features
-- **User Form**: Comprehensive user profile creation with personal and financial information
-- **Loan Form**: Detailed loan application with terms, dates, and financial details
-- **Validation**: Required fields marked with asterisks
-- **Feedback**: Success/error messages displayed after form submission
-- **Navigation**: Toggle between forms using navigation buttons
-
+This project is licensed under the MIT License - see the LICENSE file for details.

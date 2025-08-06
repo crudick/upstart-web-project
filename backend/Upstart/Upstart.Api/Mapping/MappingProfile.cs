@@ -9,6 +9,8 @@ public class MappingProfile : Profile
     public MappingProfile()
     {
         CreateMap<CreateUserApiRequest, CreateUserRequest>();
-        CreateMap<CreateLoanApiRequest, CreateLoanRequest>();
+        CreateMap<CreatePollApiRequest, CreatePollRequest>();
+        CreateMap<CreatePollAnswerApiRequest, CreatePollAnswerRequest>();
+        CreateMap<CreatePollStatApiRequest, CreatePollStatRequest>();
     }
 }

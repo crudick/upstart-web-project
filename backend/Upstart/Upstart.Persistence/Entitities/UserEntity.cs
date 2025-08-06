@@ -25,46 +25,15 @@ public class UserEntity
     [Required]
     public string Email { get; set; } = string.Empty;
 
+    [Column("password_hash")]
+    [MaxLength(255)]
+    [Required]
+    public string PasswordHash { get; set; } = string.Empty;
+
     [Column("phone_number")]
     [MaxLength(20)]
     public string? PhoneNumber { get; set; }
 
-    [Column("date_of_birth")]
-    public DateTime? DateOfBirth { get; set; }
-
-    [Column("social_security_number")]
-    [MaxLength(11)]
-    public string? SocialSecurityNumber { get; set; }
-
-    [Column("address_line_1")]
-    [MaxLength(255)]
-    public string? AddressLine1 { get; set; }
-
-    [Column("address_line_2")]
-    [MaxLength(255)]
-    public string? AddressLine2 { get; set; }
-
-    [Column("city")]
-    [MaxLength(100)]
-    public string? City { get; set; }
-
-    [Column("state")]
-    [MaxLength(2)]
-    public string? State { get; set; }
-
-    [Column("zip_code")]
-    [MaxLength(10)]
-    public string? ZipCode { get; set; }
-
-    [Column("annual_income", TypeName = "decimal(18,2)")]
-    public decimal? AnnualIncome { get; set; }
-
-    [Column("employment_status")]
-    [MaxLength(50)]
-    public string? EmploymentStatus { get; set; }
-
-    [Column("credit_score")]
-    public int? CreditScore { get; set; }
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -72,5 +41,7 @@ public class UserEntity
     [Column("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public ICollection<LoanEntity> Loans { get; set; } = new List<LoanEntity>();
+    public ICollection<PollEntity> Polls { get; set; } = new List<PollEntity>();
+    
+    public ICollection<PollStatEntity> PollStats { get; set; } = new List<PollStatEntity>();
 }
