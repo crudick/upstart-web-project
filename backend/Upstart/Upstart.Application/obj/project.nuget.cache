@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "eBMQYDOPvTw=",
+  "success": true,
+  "projectFilePath": "/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/Upstart.Application.csproj",
+  "expectedPackageFiles": [
+    "/Users/colerudick/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/8.0.0/microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
+    "/Users/colerudick/.nuget/packages/microsoft.extensions.logging.abstractions/8.0.0/microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512"
+  ],
+  "logs": []
+}

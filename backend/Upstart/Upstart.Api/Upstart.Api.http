@@ -1,0 +1,6 @@
+@Upstart.Api_HostAddress = http://localhost:5166
+
+GET {{Upstart.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

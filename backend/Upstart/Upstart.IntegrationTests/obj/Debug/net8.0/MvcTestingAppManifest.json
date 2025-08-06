@@ -1,0 +1,6 @@
+{
+  "Upstart.Api, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/colerudick\/git\/upstart-web-project\/backend\/Upstart\/Upstart.Api",
+  "Upstart.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/colerudick\/git\/upstart-web-project\/backend\/Upstart\/Upstart.Application",
+  "Upstart.Domain, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/colerudick\/git\/upstart-web-project\/backend\/Upstart\/Upstart.Domain",
+  "Upstart.Persistence, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null": "\/Users\/colerudick\/git\/upstart-web-project\/backend\/Upstart\/Upstart.Persistence"
+}

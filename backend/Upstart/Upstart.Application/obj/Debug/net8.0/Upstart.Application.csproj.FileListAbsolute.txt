@@ -1,0 +1,15 @@
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/bin/Debug/net8.0/Upstart.Application.deps.json
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/bin/Debug/net8.0/Upstart.Application.dll
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/bin/Debug/net8.0/Upstart.Application.pdb
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/bin/Debug/net8.0/Upstart.Domain.dll
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/bin/Debug/net8.0/Upstart.Domain.pdb
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.csproj.AssemblyReference.cache
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.GeneratedMSBuildEditorConfig.editorconfig
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.AssemblyInfoInputs.cache
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.AssemblyInfo.cs
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.csproj.CoreCompileInputs.cache
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart..2653BC61.Up2Date
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.dll
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/refint/Upstart.Application.dll
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/Upstart.Application.pdb
+/Users/colerudick/git/upstart-web-project/backend/Upstart/Upstart.Application/obj/Debug/net8.0/ref/Upstart.Application.dll
