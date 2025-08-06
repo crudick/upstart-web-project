@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import CreateUserForm from './components/CreateUserForm';
 import CreateLoanForm from './components/CreateLoanForm';
 import { createUser, createLoan, CreateUserRequest, CreateLoanRequest } from './services/api';
-import { FORM_CONTAINERS, TEXT, BUTTONS, LAYOUT } from './styles';
+import { FORM_CONTAINERS, TEXT, LAYOUT } from './styles';
 
 function App() {
   const [activeForm, setActiveForm] = useState<'user' | 'loan'>('user');
