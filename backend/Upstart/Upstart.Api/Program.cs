@@ -1,5 +1,7 @@
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
+using Serilog.Events;
 using Upstart.Api.Endpoints;
 using Upstart.Api.Mapping;
 using Upstart.Api.Middleware;
@@ -9,7 +11,26 @@ using Upstart.Domain.Interfaces;
 using Upstart.Persistence.Data;
 using Upstart.Persistence.Repositories;
 
-var builder = WebApplication.CreateBuilder(args);
+// Configure Serilog early
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("Microsoft.Hosting.Lifetime", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting Upstart API");
+    
+    var builder = WebApplication.CreateBuilder(args);
+    
+    // Use Serilog for logging - configuration comes from appsettings
+    builder.Host.UseSerilog((context, configuration) =>
+    {
+        configuration.ReadFrom.Configuration(context.Configuration);
+    });
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -57,6 +78,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<GlobalExceptionMiddleware>();
 
+// Add Serilog request logging
+app.UseSerilogRequestLogging(options =>
+{
+    options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms";
+    options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+    {
+        diagnosticContext.Set("RequestHost", httpContext.Request.Host.Value);
+        diagnosticContext.Set("RequestScheme", httpContext.Request.Scheme);
+        diagnosticContext.Set("UserAgent", httpContext.Request.Headers.UserAgent.FirstOrDefault());
+        diagnosticContext.Set("ClientIP", httpContext.Connection.RemoteIpAddress?.ToString());
+    };
+});
+
 app.UseCors("AllowReactApp");
 
 app.UseHttpsRedirection();
@@ -65,6 +99,17 @@ app.UseHttpsRedirection();
 app.MapUsersEndpoints();
 app.MapLoansEndpoints();
 
-app.Run();
+    Log.Information("Upstart API started successfully");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Upstart API terminated unexpectedly");
+}
+finally
+{
+    Log.Information("Upstart API is shutting down");
+    Log.CloseAndFlush();
+}
 
 public partial class Program { }
