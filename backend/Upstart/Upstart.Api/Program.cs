@@ -48,11 +48,12 @@ try
     builder.Services.AddValidatorsFromAssemblyContaining<CreateUserApiRequestValidator>();
 
     // Add CORS
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowReactApp", policy =>
         {
-            policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod();
         });
