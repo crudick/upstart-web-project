@@ -110,6 +110,8 @@ public static class PollsEndpoint
                     HttpOnly = true,
                     Secure = httpContext.Request.IsHttps,
                     SameSite = SameSiteMode.Lax,
+                    Domain = httpContext.Request.IsHttps ? ".onrender.com" : null, // Share across subdomains in production
+                    Path = "/",
                     Expires = DateTimeOffset.UtcNow.AddYears(1)
                 });
             }

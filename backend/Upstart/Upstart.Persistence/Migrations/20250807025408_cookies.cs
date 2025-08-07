@@ -5,7 +5,7 @@
 namespace Upstart.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class cookies : Migration
+    public partial class Cookies : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

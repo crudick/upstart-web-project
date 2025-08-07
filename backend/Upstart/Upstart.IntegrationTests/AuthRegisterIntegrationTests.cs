@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Upstart.Api.Models;
+using Upstart.Domain.Models;
 using Upstart.IntegrationTests.TestSetup;
 using Upstart.Persistence.Data;
 
@@ -413,11 +414,73 @@ public class AuthRegisterIntegrationTests : IClassFixture<TestWebApplicationFact
         userCount.Should().Be(5);
     }
 
+    [Fact]
+    public async Task PostAuthRegister_WithSessionCookie_ShouldMigratePollsToUser()
+    {
+        // Arrange
+        ClearDatabase();
+        
+        var sessionId = Guid.NewGuid().ToString();
+        
+        // First create a poll with session ID (simulate unauthenticated poll creation)
+        var pollRequest = new CreatePollApiRequest(
+            Question: "Test poll for migration",
+            IsMultipleChoice: false,
+            ExpiresAt: null
+        );
+        
+        var pollClient = _factory.CreateClient();
+        pollClient.DefaultRequestHeaders.Add("Cookie", $"upstart_session={sessionId}");
+        
+        var pollResponse = await pollClient.PostAsJsonAsync("/api/polls", pollRequest);
+        pollResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        var createdPoll = await pollResponse.Content.ReadFromJsonAsync<PollModel>();
+        createdPoll.Should().NotBeNull();
+        
+        // Verify poll has session ID
+        using (var contextForCheck = _factory.GetDbContext())
+        {
+            var pollEntity = await contextForCheck.Polls.FirstOrDefaultAsync(p => p.Id == createdPoll!.Id);
+            pollEntity.Should().NotBeNull();
+            pollEntity!.SessionId.Should().Be(sessionId);
+            pollEntity.UserId.Should().BeNull();
+        }
+        
+        // Now register a user with the same session ID
+        var registerRequest = new RegisterApiRequest(
+            Email: "migration@example.com",
+            Password: "SecurePass123"
+        );
+        
+        var registerClient = _factory.CreateClient();
+        registerClient.DefaultRequestHeaders.Add("Cookie", $"upstart_session={sessionId}");
+        
+        // Act
+        var registerResponse = await registerClient.PostAsJsonAsync("/api/auth/register", registerRequest);
+        
+        // Assert
+        registerResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        var authResponse = await registerResponse.Content.ReadFromJsonAsync<AuthResponse>();
+        authResponse.Should().NotBeNull();
+        
+        // Verify poll was migrated to the user
+        using var context = _factory.GetDbContext();
+        var migratedPoll = await context.Polls.FirstOrDefaultAsync(p => p.Id == createdPoll!.Id);
+        migratedPoll.Should().NotBeNull();
+        migratedPoll!.UserId.Should().Be(authResponse!.User.Id);
+        migratedPoll.SessionId.Should().BeNull(); // Should be cleared after migration
+    }
+
     private void ClearDatabase()
     {
         using var scope = _factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<UpstartDbContext>();
         context.Users.RemoveRange(context.Users);
+        context.Polls.RemoveRange(context.Polls);
+        context.PollAnswers.RemoveRange(context.PollAnswers);
+        context.PollStats.RemoveRange(context.PollStats);
         context.SaveChanges();
     }
 }

@@ -13,7 +13,7 @@ namespace Upstart.Persistence.Migrations
 {
     [DbContext(typeof(UpstartDbContext))]
     [Migration("20250807025408_cookies")]
-    partial class cookies
+    partial class Cookies
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
