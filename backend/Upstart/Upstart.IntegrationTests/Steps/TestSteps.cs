@@ -74,9 +74,9 @@ public class TestSteps
         request = validationError switch
         {
             "missing required fields" => new CreateUserApiRequest(
-                FirstName: "",
-                LastName: "",
-                Email: "",
+                FirstName: "", // Optional field - allowed to be empty
+                LastName: "", // Optional field - allowed to be empty
+                Email: "", // Required field - this will cause validation error
                 PhoneNumber: null
             ),
             "invalid email" => new CreateUserApiRequest(

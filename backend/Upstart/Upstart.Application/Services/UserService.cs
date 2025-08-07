@@ -29,8 +29,8 @@ public class UserService : IUserService
 
         var user = new UserModel
         {
-            FirstName = request.FirstName,
-            LastName = request.LastName,
+            FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? null : request.FirstName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(request.LastName) ? null : request.LastName.Trim(),
             Email = request.Email,
             PhoneNumber = request.PhoneNumber,
             CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
@@ -39,11 +39,48 @@ public class UserService : IUserService
 
         return await _usersRepository.CreateAsync(user);
     }
+
+    public async Task<UserModel> UpdateUserAsync(int userId, UpdateUserRequest request, CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Updating user {userId} with data {request}", userId, request);
+
+        var existingUser = await _usersRepository.GetByIdAsync(userId);
+        if (existingUser == null)
+        {
+            throw new InvalidOperationException($"User with ID '{userId}' not found.");
+        }
+
+        // Update only the fields that are provided
+        if (request.FirstName != null)
+        {
+            existingUser.FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? null : request.FirstName.Trim();
+        }
+
+        if (request.LastName != null)
+        {
+            existingUser.LastName = string.IsNullOrWhiteSpace(request.LastName) ? null : request.LastName.Trim();
+        }
+
+        existingUser.UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+
+        return await _usersRepository.UpdateAsync(existingUser);
+    }
+
+    public async Task<UserModel?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Getting user by ID: {userId}", id);
+        return await _usersRepository.GetByIdAsync(id);
+    }
 }
 
 public record CreateUserRequest(
-    string FirstName,
-    string LastName,
+    string? FirstName,
+    string? LastName,
     string Email,
     string? PhoneNumber
+);
+
+public record UpdateUserRequest(
+    string? FirstName,
+    string? LastName
 );

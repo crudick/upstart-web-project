@@ -3,6 +3,7 @@ import { ChartBarIcon, ClockIcon, UserIcon } from '@heroicons/react/24/outline';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 import { Poll } from '../../types';
+import { getUserDisplayName } from '../../utils/userDisplay';
 
 interface PollCardProps {
   poll: Poll;
@@ -61,7 +62,7 @@ const PollCard: React.FC<PollCardProps> = ({
               <div className="flex items-center gap-1">
                 <UserIcon className="w-4 h-4" />
                 <span className="font-montserrat">
-                  {poll.user.firstName} {poll.user.lastName}
+                  {getUserDisplayName(poll.user)}
                 </span>
               </div>
             )}

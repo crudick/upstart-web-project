@@ -16,6 +16,7 @@ import PollEditForm from './PollEditForm';
 import { useAuth } from '../contexts/AuthContext';
 import { Poll, PollAnswer, PollStat } from '../types';
 import { pollsAPI, pollAnswersAPI, pollStatsAPI } from '../services/api';
+import { getUserDisplayName } from '../utils/userDisplay';
 
 interface PollViewProps {
   pollGuid: string;
@@ -296,7 +297,7 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
               <div className="flex items-center space-x-1">
                 <UserIcon className="w-4 h-4" />
                 <span className="font-montserrat">
-                  {poll.user.firstName} {poll.user.lastName}
+                  {getUserDisplayName(poll.user)}
                 </span>
               </div>
             )}

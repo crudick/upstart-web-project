@@ -2,9 +2,11 @@ import {
   Poll,
   PollAnswer,
   PollStat,
+  User,
   AuthResponse,
   LoginRequest,
   RegisterRequest,
+  UpdateProfileRequest,
   CreatePollRequest,
   PollResults,
 } from '../types';
@@ -85,6 +87,10 @@ export const authAPI = {
       method: 'POST',
       body: JSON.stringify(userData),
     });
+  },
+
+  async getCurrentUser(): Promise<User> {
+    return makeApiCall<User>(`${API_BASE_URL}/api/auth/me`, {}, true);
   },
 };
 
@@ -209,6 +215,16 @@ export const pollStatsAPI = {
       totalViews: number;
       recentActivity: any[];
     }>(`${API_BASE_URL}/api/poll-stats/user/dashboard`, {}, true);
+  },
+};
+
+// Main API object
+export const api = {
+  async updateProfile(profileData: UpdateProfileRequest): Promise<User> {
+    return makeApiCall<User>(`${API_BASE_URL}/api/users/me`, {
+      method: 'PUT',
+      body: JSON.stringify(profileData),
+    }, true);
   },
 };
 

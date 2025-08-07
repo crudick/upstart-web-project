@@ -8,15 +8,17 @@ import {
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   PlusIcon,
-  UsersIcon
+  UsersIcon,
+  Cog6ToothIcon
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import { useAuth } from '../../contexts/AuthContext';
+import { getUserDisplayName } from '../../utils/userDisplay';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  activeTab: 'dashboard' | 'polls' | 'community';
-  onTabChange: (tab: 'dashboard' | 'polls' | 'community') => void;
+  activeTab: 'dashboard' | 'polls' | 'community' | 'profile';
+  onTabChange: (tab: 'dashboard' | 'polls' | 'community' | 'profile') => void;
   onCreatePoll: () => void;
 }
 
@@ -47,6 +49,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       label: 'Community',
       icon: UsersIcon,
       description: 'Discover community polls',
+    },
+    {
+      id: 'profile' as const,
+      label: 'Profile',
+      icon: Cog6ToothIcon,
+      description: 'Account settings',
     },
   ];
 
@@ -96,7 +104,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               </div>
               <div>
                 <p className="font-semibold text-gray-900 font-montserrat">
-                  {user?.firstName} {user?.lastName}
+                  {getUserDisplayName(user)}
                 </p>
                 <p className="text-sm text-gray-500 font-montserrat">
                   {user?.email}

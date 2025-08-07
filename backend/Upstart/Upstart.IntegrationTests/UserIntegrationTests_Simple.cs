@@ -50,10 +50,10 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
     [Fact]
     public async Task PostUsers_WithMissingRequiredFields_ShouldReturn400()
     {
-        // Arrange - Test validation behavior
+        // Arrange - Test validation behavior (only email is required now)
         var invalidRequest = new CreateUserApiRequest(
-            FirstName: "", // Invalid - required field
-            LastName: "", // Invalid - required field  
+            FirstName: "", // Optional field - now allowed
+            LastName: "", // Optional field - now allowed  
             Email: "", // Invalid - required field
             PhoneNumber: null
         );
@@ -63,6 +63,8 @@ public class UserIntegrationTests_Simple : IClassFixture<TestWebApplicationFacto
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        responseContent.Should().ContainEquivalentOf("email"); // Only email should cause validation error
     }
 
     [Fact]

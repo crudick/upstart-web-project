@@ -6,6 +6,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './components/pages/DashboardPage';
 import PollsPage from './components/pages/PollsPage';
 import CommunityPollsPage from './components/pages/CommunityPollsPage';
+import ProfilePage from './components/pages/ProfilePage';
 import PollCreationForm from './components/PollCreationForm';
 import PollView from './components/PollView';
 import PollResults from './components/PollResults';
@@ -52,7 +53,7 @@ const PollPage: React.FC = () => {
 // Authenticated Dashboard Component
 const AuthenticatedApp: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'polls' | 'community'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'polls' | 'community' | 'profile'>('dashboard');
   const [showCreatePoll, setShowCreatePoll] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -90,6 +91,8 @@ const AuthenticatedApp: React.FC = () => {
             onCreatePoll={handleCreatePoll}
             onViewPoll={handleViewPoll}
           />
+        ) : activeTab === 'profile' ? (
+          <ProfilePage />
         ) : (
           <CommunityPollsPage />
         )}

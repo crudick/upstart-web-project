@@ -69,7 +69,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     [Fact]
     public async Task PostUsers_WithMissingRequiredFields_ShouldReturn400()
     {
-        // Arrange - Test validation
+        // Arrange - Test validation (only email is required now)
         _steps.GivenNoUsersExist()
                .GivenInvalidUserRequest(out var invalidRequest, "missing required fields");
 
@@ -78,8 +78,7 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
 
         // Assert
         _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.BadRequest);
-        await _steps.ThenTheResponseShouldContainValidationError("FirstName");
-        await _steps.ThenTheResponseShouldContainValidationError("LastName");
+        // FirstName and LastName are no longer required, only Email is required
         await _steps.ThenTheResponseShouldContainValidationError("Email");
     }
 
@@ -117,13 +116,36 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     [Fact]
     public async Task PostUsers_WithOnlyRequiredFields_ShouldCreateUserAndReturn201()
     {
-        // Arrange - Test minimal valid request
+        // Arrange - Test minimal valid request (only email is required now)
         _steps.GivenNoUsersExist();
 
         var minimalRequest = new CreateUserApiRequest(
-            FirstName: "Jane",
-            LastName: "Smith",
+            FirstName: null, // Optional
+            LastName: null, // Optional
             Email: "jane.smith@example.com",
+            PhoneNumber: null
+        );
+
+        // Act
+        await _steps.WhenIPostToUsersEndpoint(minimalRequest);
+
+        // Assert
+        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.Created);
+        await _steps.ThenTheResponseShouldContainUserWithEmail(minimalRequest.Email);
+        await _steps.ThenTheUserShouldBeCreatedInDatabase(minimalRequest.Email);
+    }
+
+    [Fact]
+    public async Task PostUsers_WithEmptyOptionalFields_ShouldCreateUserAndReturn201()
+    {
+        // Arrange - Test that empty strings for optional fields are allowed
+        _steps.GivenNoUsersExist();
+
+        var uniqueEmail = $"minimal{Guid.NewGuid()}@example.com";
+        var minimalRequest = new CreateUserApiRequest(
+            FirstName: "", // Empty optional field
+            LastName: "", // Empty optional field
+            Email: uniqueEmail,
             PhoneNumber: null
         );
 
@@ -140,48 +162,50 @@ public class UserIntegrationTests : IClassFixture<TestWebApplicationFactory<Prog
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public async Task PostUsers_WithInvalidFirstName_ShouldReturn400(string invalidFirstName)
+    public async Task PostUsers_WithOptionalFirstName_ShouldReturn201(string optionalFirstName)
     {
-        // Arrange
+        // Arrange - FirstName is now optional, so these should succeed
         _steps.GivenNoUsersExist();
 
-        var invalidRequest = new CreateUserApiRequest(
-            FirstName: invalidFirstName,
+        var uniqueEmail = $"test{Guid.NewGuid()}@example.com";
+        var validRequest = new CreateUserApiRequest(
+            FirstName: optionalFirstName,
             LastName: "Doe",
-            Email: "test@example.com",
+            Email: uniqueEmail,
             PhoneNumber: null
         );
 
         // Act
-        await _steps.WhenIPostToUsersEndpoint(invalidRequest);
+        await _steps.WhenIPostToUsersEndpoint(validRequest);
 
         // Assert
-        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.BadRequest);
-        await _steps.ThenTheResponseShouldContainValidationError("FirstName");
+        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.Created);
+        await _steps.ThenTheUserShouldBeCreatedInDatabase(uniqueEmail);
     }
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public async Task PostUsers_WithInvalidLastName_ShouldReturn400(string invalidLastName)
+    public async Task PostUsers_WithOptionalLastName_ShouldReturn201(string optionalLastName)
     {
-        // Arrange
+        // Arrange - LastName is now optional, so these should succeed
         _steps.GivenNoUsersExist();
 
-        var invalidRequest = new CreateUserApiRequest(
+        var uniqueEmail = $"test{Guid.NewGuid()}@example.com";
+        var validRequest = new CreateUserApiRequest(
             FirstName: "John",
-            LastName: invalidLastName,
-            Email: "test@example.com",
+            LastName: optionalLastName,
+            Email: uniqueEmail,
             PhoneNumber: null
         );
 
         // Act
-        await _steps.WhenIPostToUsersEndpoint(invalidRequest);
+        await _steps.WhenIPostToUsersEndpoint(validRequest);
 
         // Assert
-        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.BadRequest);
-        await _steps.ThenTheResponseShouldContainValidationError("LastName");
+        _steps.ThenTheResponseShouldHaveStatusCode(HttpStatusCode.Created);
+        await _steps.ThenTheUserShouldBeCreatedInDatabase(uniqueEmail);
     }
 
     [Theory]

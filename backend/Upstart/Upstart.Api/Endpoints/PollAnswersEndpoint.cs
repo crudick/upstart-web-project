@@ -61,12 +61,21 @@ public static class PollAnswersEndpoint
         }
 
         var serviceRequest = mapper.Map<CreatePollAnswerRequest>(request);
-        var result = await pollAnswerService.CreatePollAnswerAsync(serviceRequest);
+        
+        try
+        {
+            var result = await pollAnswerService.CreatePollAnswerAsync(serviceRequest);
 
-        logger.LogInformation("Poll answer created successfully with ID: {PollAnswerId} for poll ID: {PollId}",
-            result.Id, result.PollId);
+            logger.LogInformation("Poll answer created successfully with ID: {PollAnswerId} for poll ID: {PollId}",
+                result.Id, result.PollId);
 
-        return Results.Created($"/api/poll-answers/{result.Id}", result);
+            return Results.Created($"/api/poll-answers/{result.Id}", result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning("Poll answer creation failed: {ErrorMessage}", ex.Message);
+            return Results.NotFound(ex.Message);
+        }
     }
 
     private static async Task<IResult> GetPollAnswerById(int id, IPollAnswerService pollAnswerService, ILogger<IPollAnswerService> logger)
