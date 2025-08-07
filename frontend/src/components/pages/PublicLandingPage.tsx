@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ChartPieIcon, 
-  UsersIcon, 
-  ShareIcon, 
-  SparklesIcon,
   PlusIcon,
   ArrowRightIcon 
 } from '@heroicons/react/24/outline';
@@ -39,28 +36,6 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onViewPoll }) => 
     fetchPublicPolls();
   }, []);
 
-  const features = [
-    {
-      icon: ChartPieIcon,
-      title: 'Real-time Results',
-      description: 'Watch responses come in live with beautiful charts and analytics',
-    },
-    {
-      icon: ShareIcon,
-      title: 'Easy Sharing',
-      description: 'Share your polls instantly via link, QR code, or social media',
-    },
-    {
-      icon: UsersIcon,
-      title: 'Audience Insights',
-      description: 'Understand your audience better with detailed participation data',
-    },
-    {
-      icon: SparklesIcon,
-      title: 'Beautiful Design',
-      description: 'Professional-looking polls that engage your audience',
-    },
-  ];
 
   if (showAuth) {
     return (

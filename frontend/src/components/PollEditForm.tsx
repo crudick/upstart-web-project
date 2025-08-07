@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
 import Button from './ui/Button';
 import Input from './ui/Input';
 import Card from './ui/Card';
-import { Poll, PollAnswer } from '../types';
+import { Poll } from '../types';
 import { pollsAPI, pollAnswersAPI } from '../services/api';
 
 interface PollEditFormProps {
@@ -37,7 +37,7 @@ const PollEditForm: React.FC<PollEditFormProps> = ({ poll, onClose, onPollUpdate
 
     try {
       // Update the poll
-      const updatedPoll = await pollsAPI.updatePoll(poll.id, {
+      await pollsAPI.updatePoll(poll.id, {
         question: formData.question.trim(),
         expiresAt: formData.expiresAt || undefined,
         allowMultipleResponses: formData.allowMultipleResponses,

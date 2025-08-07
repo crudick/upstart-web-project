@@ -2,6 +2,7 @@ using AutoMapper;
 using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Upstart.Api.Extensions;
 using Upstart.Api.Models;
 using Upstart.Application.Interfaces;
 using Upstart.Application.Services;
@@ -59,39 +60,38 @@ public static class UsersEndpoint
         HttpContext context,
         ILogger<UserService> logger)
     {
-        var userIdClaim = context.User.FindFirst("userId")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-        {
-            logger.LogWarning("User ID not found in claims or invalid");
-            return Results.Unauthorized();
-        }
-
-        logger.LogInformation("Updating profile for user ID: {UserId}", userId);
-
-        var validationResult = await validator.ValidateAsync(request);
-        if (!validationResult.IsValid)
-        {
-            logger.LogWarning("Profile update validation failed for user ID: {UserId}. Errors: {@ValidationErrors}",
-                userId, validationResult.Errors);
-            return Results.BadRequest(validationResult.ToDictionary());
-        }
-
         try
         {
+            var userId = context.GetUserId();
+            logger.LogInformation("Updating profile for user ID: {UserId}", userId);
+
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                logger.LogWarning("Profile update validation failed for user ID: {UserId}. Errors: {@ValidationErrors}",
+                    userId, validationResult.Errors);
+                return Results.BadRequest(validationResult.ToDictionary());
+            }
+
             var serviceRequest = mapper.Map<UpdateUserRequest>(request);
             var result = await userService.UpdateUserAsync(userId, serviceRequest);
 
             logger.LogInformation("Profile updated successfully for user ID: {UserId}", userId);
             return Results.Ok(result);
         }
+        catch (UnauthorizedAccessException ex)
+        {
+            logger.LogWarning("Unauthorized access attempt: {Message}", ex.Message);
+            return Results.Unauthorized();
+        }
         catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
         {
-            logger.LogWarning("User not found for ID: {UserId}", userId);
-            return Results.NotFound();
+            logger.LogWarning("User not found: {Message}", ex.Message);
+            return Results.NotFound(ex.Message);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating profile for user ID: {UserId}", userId);
+            logger.LogError(ex, "Error updating user profile");
             return Results.Problem("An error occurred while updating the profile");
         }
     }
