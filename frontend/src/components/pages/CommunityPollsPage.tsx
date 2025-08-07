@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   MagnifyingGlassIcon,
@@ -25,22 +25,7 @@ const CommunityPollsPage: React.FC = () => {
     fetchCommunityPolls();
   }, []);
 
-  useEffect(() => {
-    filterAndSortPolls();
-  }, [polls, searchTerm, sortBy]);
-
-  const fetchCommunityPolls = async () => {
-    try {
-      const publicPolls = await pollsAPI.getPublicPolls();
-      setPolls(publicPolls);
-    } catch (error) {
-      console.error('Failed to fetch community polls:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filterAndSortPolls = () => {
+  const filterAndSortPolls = useCallback(() => {
     let filtered = polls.filter(poll =>
       poll.question.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -64,6 +49,21 @@ const CommunityPollsPage: React.FC = () => {
     }
 
     setFilteredPolls(filtered);
+  }, [polls, searchTerm, sortBy]);
+
+  useEffect(() => {
+    filterAndSortPolls();
+  }, [filterAndSortPolls]);
+
+  const fetchCommunityPolls = async () => {
+    try {
+      const publicPolls = await pollsAPI.getPublicPolls();
+      setPolls(publicPolls);
+    } catch (error) {
+      console.error('Failed to fetch community polls:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePollClick = (poll: Poll) => {

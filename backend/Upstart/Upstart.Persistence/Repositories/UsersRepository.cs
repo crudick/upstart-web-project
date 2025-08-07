@@ -44,10 +44,23 @@ public class UsersRepository : IUsersRepository
 
     public async Task<UserModel> UpdateAsync(UserModel user)
     {
-        var entity = MapToEntity(user);
-        _context.Set<UserEntity>().Update(entity);
+        // Find the existing entity that might already be tracked
+        var existingEntity = await _context.Set<UserEntity>().FindAsync(user.Id);
+        if (existingEntity == null)
+        {
+            throw new InvalidOperationException($"User with ID '{user.Id}' not found.");
+        }
+
+        // Update the tracked entity's properties
+        existingEntity.FirstName = user.FirstName;
+        existingEntity.LastName = user.LastName;
+        existingEntity.Email = user.Email;
+        existingEntity.PasswordHash = user.PasswordHash;
+        existingEntity.PhoneNumber = user.PhoneNumber;
+        existingEntity.UpdatedAt = user.UpdatedAt;
+
         await _context.SaveChangesAsync();
-        return MapToModel(entity);
+        return MapToModel(existingEntity);
     }
 
     public async Task DeleteAsync(int id)
