@@ -8,17 +8,26 @@ namespace Upstart.Application.Services;
 public class PollAnswerService : IPollAnswerService
 {
     private readonly IPollAnswersRepository _pollAnswersRepository;
+    private readonly IPollService _pollService;
     private readonly ILogger<PollAnswerService> _logger;
 
-    public PollAnswerService(IPollAnswersRepository pollAnswersRepository, ILogger<PollAnswerService> logger)
+    public PollAnswerService(IPollAnswersRepository pollAnswersRepository, IPollService pollService, ILogger<PollAnswerService> logger)
     {
         _pollAnswersRepository = pollAnswersRepository;
+        _pollService = pollService;
         _logger = logger;
     }
 
     public async Task<PollAnswerModel> CreatePollAnswerAsync(CreatePollAnswerRequest request, CancellationToken cancellationToken = default)
     {
         _logger.LogDebug("Creating poll answer for poll ID: {PollId}", request.PollId);
+
+        // Validate that the poll exists
+        var poll = await _pollService.GetPollByIdAsync(request.PollId, cancellationToken);
+        if (poll == null)
+        {
+            throw new InvalidOperationException($"Poll with ID '{request.PollId}' not found.");
+        }
 
         var pollAnswer = new PollAnswerModel
         {

@@ -1,7 +1,7 @@
 export interface User {
   id: number;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phoneNumber?: string;
   createdAt: string;
@@ -58,6 +58,11 @@ export interface LoginRequest {
 export interface RegisterRequest {
   email: string;
   password: string;
+}
+
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface CreatePollRequest {

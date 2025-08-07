@@ -51,8 +51,8 @@ public class AuthenticationService : IAuthenticationService
             {
                 Email = request.Email.ToLowerInvariant(),
                 PasswordHash = passwordHash,
-                FirstName = request.FirstName,
-                LastName = request.LastName,
+                FirstName = null,
+                LastName = null,
                 CreatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc),
                 UpdatedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
             };
@@ -145,7 +145,7 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    public string GenerateJwtToken(string email, int userId, string firstName, string lastName)
+    public string GenerateJwtToken(string email, int userId, string? firstName, string? lastName)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
@@ -158,16 +158,26 @@ public class AuthenticationService : IAuthenticationService
         }
 
         var key = Encoding.ASCII.GetBytes(secretKey);
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Email, email),
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+            new Claim("userId", userId.ToString()) // Custom claim for easier access
+        };
+
+        if (!string.IsNullOrEmpty(firstName))
+        {
+            claims.Add(new Claim(ClaimTypes.GivenName, firstName));
+        }
+
+        if (!string.IsNullOrEmpty(lastName))
+        {
+            claims.Add(new Claim(ClaimTypes.Surname, lastName));
+        }
+
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Email, email),
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.GivenName, firstName),
-                new Claim(ClaimTypes.Surname, lastName),
-                new Claim("userId", userId.ToString()) // Custom claim for easier access
-            }),
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddDays(7),
             Issuer = issuer,
             Audience = audience,

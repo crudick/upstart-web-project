@@ -75,11 +75,21 @@ public static class PollsEndpoint
             .RequireAuthorization();
     }
 
-    private static async Task<IResult> CreatePoll(CreatePollApiRequest request, IPollService pollService, IMapper mapper, ILogger<IPollService> logger, HttpContext httpContext)
+    private static async Task<IResult> CreatePoll(CreatePollApiRequest request, IPollService pollService, IValidator<CreatePollApiRequest> validator, IMapper mapper, ILogger<IPollService> logger, HttpContext httpContext)
     {
         logger.LogInformation("Creating poll: {Question}", request.Question);
 
         var userId = httpContext.GetUserId();
+
+        // Validate the request
+        var validationResult = await validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+        {
+            logger.LogWarning("Poll creation validation failed for user: {UserId}. Errors: {@ValidationErrors}",
+                userId, validationResult.Errors);
+            return Results.BadRequest(validationResult.ToDictionary());
+        }
+
         var serviceRequest = new CreatePollRequest(
             userId,
             request.Question,

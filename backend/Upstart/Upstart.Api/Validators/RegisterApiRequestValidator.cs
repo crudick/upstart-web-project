@@ -23,16 +23,5 @@ public class RegisterApiRequestValidator : AbstractValidator<RegisterApiRequest>
             .Matches(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)")
             .WithMessage("Password must contain at least one lowercase letter, one uppercase letter, and one number");
 
-        RuleFor(x => x.FirstName)
-            .NotEmpty()
-            .WithMessage("First name is required")
-            .MaximumLength(100)
-            .WithMessage("First name cannot exceed 100 characters");
-
-        RuleFor(x => x.LastName)
-            .NotEmpty()
-            .WithMessage("Last name is required")
-            .MaximumLength(100)
-            .WithMessage("Last name cannot exceed 100 characters");
     }
 }

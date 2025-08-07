@@ -5,5 +5,9 @@
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.UserIntegrationTests_Simple&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.UserIntegrationTests.PostUsers_WithDuplicateEmail_ShouldReturn400&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.UserIntegrationTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.AuthRegisterIntegrationTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.PollCreationIntegrationTests&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::333FC12A-B9D0-4AD6-9693-2E3B919168F5::net8.0::Upstart.IntegrationTests.PollAnswersIntegrationTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { EyeIcon, EyeSlashIcon, EnvelopeIcon, UserIcon, PhoneIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, EyeSlashIcon, EnvelopeIcon } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Card from '../ui/Card';
@@ -14,11 +14,8 @@ interface RegisterFormProps {
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   const { register } = useAuth();
   const [formData, setFormData] = useState<RegisterRequest>({
-    firstName: '',
-    lastName: '',
     email: '',
     password: '',
-    phoneNumber: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,11 +34,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     }
 
     try {
-      const registerData = {
-        ...formData,
-        phoneNumber: formData.phoneNumber || undefined,
-      };
-      await register(registerData);
+      await register(formData);
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
     } finally {
@@ -76,26 +69,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              type="text"
-              label="First Name"
-              placeholder="John"
-              leftIcon={<UserIcon className="w-5 h-5" />}
-              value={formData.firstName}
-              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              required
-            />
-            <Input
-              type="text"
-              label="Last Name"
-              placeholder="Doe"
-              value={formData.lastName}
-              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              required
-            />
-          </div>
-
           <Input
             type="email"
             label="Email"
@@ -104,16 +77,6 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             required
-          />
-
-          <Input
-            type="tel"
-            label="Phone Number"
-            placeholder="(555) 123-4567"
-            leftIcon={<PhoneIcon className="w-5 h-5" />}
-            value={formData.phoneNumber}
-            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-            helperText="Optional"
           />
 
           <Input

@@ -13,6 +13,7 @@ import Button from './ui/Button';
 import Card from './ui/Card';
 import { Poll } from '../types';
 import { pollsAPI, pollAnswersAPI, pollStatsAPI } from '../services/api';
+import { getUserDisplayName } from '../utils/userDisplay';
 
 interface PollResultsProps {
   pollGuid: string;
@@ -226,7 +227,7 @@ const PollResults: React.FC<PollResultsProps> = ({ pollGuid, onBackToPoll }) => 
               <div className="flex items-center space-x-1">
                 <UserIcon className="w-4 h-4" />
                 <span className="font-montserrat">
-                  {poll.user.firstName} {poll.user.lastName}
+                  {getUserDisplayName(poll.user)}
                 </span>
               </div>
             )}
