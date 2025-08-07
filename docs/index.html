@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>UpPoll API Documentation</title>
+    <meta name="description" content="Comprehensive API documentation for the UpPoll platform" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzM3MzNEOSIvPgo8cGF0aCBkPSJNMTYgOUMxMi4xMzQgOSA5IDEyLjEzNCA5IDE2QzAgMTkuODY2IDEyLjEzNCAyMyAxNiAyM0MxOS44NjYgMjMgMjMgMTkuODY2IDIzIDE2QzIzIDEyLjEzNCAxOS44NjYgOSAxNiA5WiIgZmlsbD0iI0ZGRkZGRiIvPgo8Y2lyY2xlIGN4PSIxNiIgY3k9IjE2IiByPSIzIiBmaWxsPSIjMzczM0Q5Ii8+Cjwvc3ZnPgo=" />
+    
+    <!-- Redoc CSS -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Custom theme overrides */
+        redoc {
+            --redoc-color-primary: #3733d9;
+            --redoc-color-primary-light: rgba(55, 51, 217, 0.1);
+            --redoc-color-primary-dark: #2c28b3;
+            --redoc-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        /* Header customization */
+        .redoc-wrap .api-info-wrap {
+            background: linear-gradient(135deg, #3733d9 0%, #2c28b3 100%);
+            color: white;
+        }
+        
+        .redoc-wrap .api-info-wrap h1 {
+            color: white;
+        }
+        
+        /* Custom header banner */
+        .custom-header {
+            background: linear-gradient(135deg, #3733d9 0%, #2c28b3 100%);
+            color: white;
+            padding: 20px 40px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .custom-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .custom-header p {
+            margin: 10px 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        /* Links */
+        .custom-header a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+            transition: border-color 0.2s ease;
+        }
+        
+        .custom-header a:hover {
+            border-color: white;
+        }
+        
+        /* Navigation links */
+        .nav-links {
+            margin-top: 20px;
+        }
+        
+        .nav-links a {
+            display: inline-block;
+            margin: 0 15px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-weight: 500;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+        
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .custom-header {
+                padding: 20px 20px;
+            }
+            
+            .custom-header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-links a {
+                display: block;
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom header -->
+    <div class="custom-header">
+        <h1>🗳️ UpPoll API</h1>
+        <p>Comprehensive RESTful API for modern polling and surveys</p>
+        <div class="nav-links">
+            <a href="https://github.com/your-org/upstart-web-project" target="_blank">📦 GitHub</a>
+            <a href="../README.md" target="_blank">📚 Documentation</a>
+            <a href="openapi.yaml" target="_blank">📋 OpenAPI Spec</a>
+        </div>
+    </div>
+
+    <!-- Redoc container -->
+    <div id="redoc-container"></div>
+
+    <!-- Redoc bundle -->
+    <script src="https://cdn.redoc.ly/redoc/2.1.3/bundles/redoc.standalone.js"></script>
+    
+    <!-- Initialize Redoc -->
+    <script>
+        Redoc.init('./openapi.yaml', {
+            // Theme options
+            theme: {
+                colors: {
+                    primary: {
+                        main: '#3733d9'
+                    }
+                },
+                typography: {
+                    fontSize: '14px',
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                    headings: {
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                        fontWeight: '600'
+                    }
+                },
+                sidebar: {
+                    width: '280px'
+                }
+            },
+            
+            // Display options
+            scrollYOffset: 0,
+            hideDownloadButton: false,
+            disableSearch: false,
+            expandResponses: 'all',
+            jsonSampleExpandLevel: 2,
+            hideSingleRequestSampleTab: true,
+            menuToggle: true,
+            pathInMiddlePanel: true,
+            requiredPropsFirst: true,
+            sortPropsAlphabetically: false,
+            showExtensions: true,
+            
+            // Navigation
+            expandSingleSchemaField: true,
+            showObjectSchemaExamples: true,
+            
+            // Code samples
+            nativeScrollbars: false,
+            
+            // Custom options
+            noAutoAuth: false,
+            hideLoading: false
+        }, document.getElementById('redoc-container'));
+    </script>
+
+    <!-- Analytics placeholder -->
+    <!-- Add your analytics code here -->
+    
+</body>
+</html>

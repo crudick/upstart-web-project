@@ -1,0 +1,1140 @@
+openapi: 3.0.3
+info:
+  title: UpPoll API
+  description: |
+    A comprehensive RESTful API for the UpPoll platform - a modern polling and survey application.
+    
+    ## Authentication
+    The API supports both authenticated and anonymous users:
+    - **JWT Bearer Tokens** for registered users
+    - **Session tracking** via `X-Session-ID` header for anonymous users
+    - **CSRF protection** for state-changing operations
+    
+    ## Features
+    - Create and manage polls (authenticated and anonymous)
+    - Submit poll responses with user/session tracking
+    - Real-time poll results and analytics
+    - User registration and authentication
+    - Session-based poll migration during registration
+    
+  version: 1.0.0
+  contact:
+    name: UpPoll API Support
+    email: support@uppoll.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.uppoll.com
+    description: Production server
+  - url: https://staging-api.uppoll.com
+    description: Staging server
+  - url: http://localhost:5166
+    description: Local development server
+
+security:
+  - BearerAuth: []
+  - SessionID: []
+  - {}
+
+paths:
+  # Authentication Endpoints
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      description: |
+        Register a new user with email and password. Optionally provide a session ID 
+        to migrate anonymous polls to the new user account.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email already exists
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login with email and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user information
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # CSRF Endpoints
+  /api/csrf/token:
+    get:
+      tags:
+        - Security
+      summary: Get CSRF token
+      description: Retrieve a CSRF token for secure form submissions
+      security: []
+      responses:
+        '200':
+          description: CSRF token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: CSRF token for form submission
+                required:
+                  - token
+
+  # Poll Endpoints
+  /api/polls:
+    get:
+      tags:
+        - Polls
+      summary: Get all polls
+      security: []
+      responses:
+        '200':
+          description: List of all polls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Poll'
+    
+    post:
+      tags:
+        - Polls
+      summary: Create a new poll
+      description: |
+        Create a poll as either an authenticated user or anonymous session.
+        Anonymous users must provide X-Session-ID header.
+      security:
+        - BearerAuth: []
+        - SessionID: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePollRequest'
+      responses:
+        '201':
+          description: Poll created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/polls/public:
+    get:
+      tags:
+        - Polls
+      summary: Get all public polls
+      security: []
+      responses:
+        '200':
+          description: List of public polls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Poll'
+
+  /api/polls/user:
+    get:
+      tags:
+        - Polls
+      summary: Get current user's polls
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User's polls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Poll'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/polls/active:
+    get:
+      tags:
+        - Polls
+      summary: Get all active polls
+      security: []
+      responses:
+        '200':
+          description: List of active polls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Poll'
+
+  /api/polls/{id}:
+    get:
+      tags:
+        - Polls
+      summary: Get poll by ID
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Poll details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Polls
+      summary: Update a poll
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePollRequest'
+      responses:
+        '200':
+          description: Poll updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Polls
+      summary: Delete a poll
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Poll deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/polls/guid/{guid}:
+    get:
+      tags:
+        - Polls
+      summary: Get poll by GUID
+      security: []
+      parameters:
+        - name: guid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Poll details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Poll'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/polls/{id}/answers:
+    put:
+      tags:
+        - Polls
+      summary: Replace all poll answers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+              example: ["Option 1", "Option 2", "Option 3"]
+      responses:
+        '200':
+          description: Poll answers updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # Poll Answer Endpoints
+  /api/poll-answers:
+    post:
+      tags:
+        - Poll Answers
+      summary: Create a poll answer
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePollAnswerRequest'
+      responses:
+        '201':
+          description: Poll answer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollAnswer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/poll-answers/{id}:
+    get:
+      tags:
+        - Poll Answers
+      summary: Get poll answer by ID
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Poll answer details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollAnswer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Poll Answers
+      summary: Update a poll answer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePollAnswerRequest'
+      responses:
+        '200':
+          description: Poll answer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollAnswer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Poll Answers
+      summary: Delete a poll answer
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Poll answer deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/poll-answers/poll/{pollId}:
+    get:
+      tags:
+        - Poll Answers
+      summary: Get answers for a specific poll
+      security: []
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of poll answers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PollAnswer'
+
+  # Poll Stats Endpoints
+  /api/poll-stats:
+    post:
+      tags:
+        - Poll Stats
+      summary: Submit poll response (authenticated)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePollStatRequest'
+      responses:
+        '201':
+          description: Poll response submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollStat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/poll-stats/anonymous:
+    post:
+      tags:
+        - Poll Stats
+      summary: Submit anonymous poll response
+      security:
+        - SessionID: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePollStatRequest'
+      responses:
+        '201':
+          description: Anonymous poll response submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollStat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/poll-stats/{id}:
+    get:
+      tags:
+        - Poll Stats
+      summary: Get poll stat by ID
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Poll stat details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollStat'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Poll Stats
+      summary: Update poll response (change answer)
+      description: |
+        Update a poll response to change the selected answer.
+        Supports both authenticated users and anonymous sessions.
+      security:
+        - BearerAuth: []
+        - SessionID: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePollStatRequest'
+      responses:
+        '200':
+          description: Poll response updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollStat'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Poll Stats
+      summary: Delete a poll stat
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Poll stat deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/poll-stats/poll/{pollId}/results:
+    get:
+      tags:
+        - Poll Stats
+      summary: Get poll results
+      security: []
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Poll results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PollStat'
+
+  /api/poll-stats/poll/{pollId}/user/me:
+    get:
+      tags:
+        - Poll Stats
+      summary: Get current user's response to a poll
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User's poll response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollStat'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: User has not responded to this poll
+
+  /api/poll-stats/poll/{pollId}/session/me:
+    get:
+      tags:
+        - Poll Stats
+      summary: Get current session's response to a poll
+      security:
+        - SessionID: []
+      parameters:
+        - name: pollId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Session's poll response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollStat'
+        '404':
+          description: Session has not responded to this poll
+
+  # User Endpoints
+  /api/users:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/users/me:
+    put:
+      tags:
+        - Users
+      summary: Update current user's profile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    SessionID:
+      type: apiKey
+      in: header
+      name: X-Session-ID
+
+  schemas:
+    # Authentication Models
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "SecurePassword123"
+        sessionId:
+          type: string
+          description: "Optional session ID for poll migration"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          example: "SecurePassword123"
+
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+          description: "JWT authentication token"
+        user:
+          $ref: '#/components/schemas/User'
+
+    # User Models
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        firstName:
+          type: string
+          nullable: true
+          example: "John"
+        lastName:
+          type: string
+          nullable: true
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          example: "john.doe@example.com"
+        phoneNumber:
+          type: string
+          nullable: true
+          example: "+1-555-0123"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          example: "John"
+        lastName:
+          type: string
+          maxLength: 100
+          example: "Doe"
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: "john.doe@example.com"
+        phoneNumber:
+          type: string
+          maxLength: 20
+          example: "+1-555-0123"
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "John"
+        lastName:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "Doe"
+
+    # Poll Models
+    Poll:
+      type: object
+      required:
+        - id
+        - pollGuid
+        - question
+        - isActive
+        - isMultipleChoice
+        - requiresAuthentication
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        pollGuid:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        userId:
+          type: integer
+          nullable: true
+          description: "ID of the user who created the poll"
+          example: 1
+        sessionId:
+          type: string
+          nullable: true
+          description: "Session ID for anonymous poll creators"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        question:
+          type: string
+          maxLength: 500
+          example: "What is your favorite programming language?"
+        isActive:
+          type: boolean
+          example: true
+        isMultipleChoice:
+          type: boolean
+          example: false
+        requiresAuthentication:
+          type: boolean
+          example: false
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/PollAnswer'
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/PollStat'
+
+    CreatePollRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          maxLength: 500
+          example: "What is your favorite programming language?"
+        isActive:
+          type: boolean
+          default: true
+          example: true
+        isMultipleChoice:
+          type: boolean
+          default: false
+          example: false
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    UpdatePollRequest:
+      type: object
+      properties:
+        question:
+          type: string
+          maxLength: 500
+          example: "What is your favorite programming language?"
+        isActive:
+          type: boolean
+          example: true
+        isMultipleChoice:
+          type: boolean
+          example: false
+        requiresAuthentication:
+          type: boolean
+          example: false
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    # Poll Answer Models
+    PollAnswer:
+      type: object
+      required:
+        - id
+        - pollId
+        - answerText
+        - displayOrder
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        pollId:
+          type: integer
+          example: 1
+        answerText:
+          type: string
+          maxLength: 500
+          example: "JavaScript"
+        displayOrder:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreatePollAnswerRequest:
+      type: object
+      required:
+        - pollId
+        - answerText
+        - displayOrder
+      properties:
+        pollId:
+          type: integer
+          example: 1
+        answerText:
+          type: string
+          maxLength: 500
+          example: "JavaScript"
+        displayOrder:
+          type: integer
+          example: 1
+
+    UpdatePollAnswerRequest:
+      type: object
+      properties:
+        answerText:
+          type: string
+          maxLength: 500
+          example: "JavaScript"
+        displayOrder:
+          type: integer
+          example: 1
+
+    # Poll Stat Models
+    PollStat:
+      type: object
+      required:
+        - id
+        - pollId
+        - pollAnswerId
+        - selectedAt
+      properties:
+        id:
+          type: integer
+          example: 1
+        pollId:
+          type: integer
+          example: 1
+        pollAnswerId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          nullable: true
+          description: "ID of the user who voted (null for anonymous)"
+          example: 1
+        sessionId:
+          type: string
+          nullable: true
+          description: "Session ID for anonymous voters"
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        selectedAt:
+          type: string
+          format: date-time
+
+    CreatePollStatRequest:
+      type: object
+      required:
+        - pollId
+        - pollAnswerId
+        - userId
+      properties:
+        pollId:
+          type: integer
+          example: 1
+        pollAnswerId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          description: "Will be overridden by authentication context"
+          example: 0
+
+    UpdatePollStatRequest:
+      type: object
+      required:
+        - pollAnswerId
+      properties:
+        pollAnswerId:
+          type: integer
+          example: 2
+
+    # Error Models
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: "An error occurred"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: ["Email is required", "Email must be valid"]
+
+  responses:
+    BadRequest:
+      description: Bad request - validation errors
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Security
+    description: Security utilities (CSRF tokens, etc.)
+  - name: Polls
+    description: Poll management operations
+  - name: Poll Answers
+    description: Poll answer management
+  - name: Poll Stats
+    description: Poll response tracking and analytics
+  - name: Users
+    description: User account management
