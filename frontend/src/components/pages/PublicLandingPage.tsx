@@ -46,7 +46,7 @@ const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onViewPoll }) => 
     };
 
     fetchPublicPolls();
-  }, []);
+  }, [sortBy]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

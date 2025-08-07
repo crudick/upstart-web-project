@@ -97,29 +97,15 @@ public static class PollsEndpoint
             // User is not authenticated, which is fine for unauthenticated polls
         }
 
-        // For unauthenticated users, get or create session ID
+        // For unauthenticated users, get session ID from header or cookie
         string? sessionId = null;
         if (userId == null)
         {
-            sessionId = httpContext.Request.Cookies["upstart_session"];
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                sessionId = Guid.NewGuid().ToString();
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = httpContext.Request.IsHttps,
-                    SameSite = SameSiteMode.Lax,
-                    Domain = httpContext.Request.IsHttps ? ".onrender.com" : null, // Share across subdomains in production
-                    Path = "/",
-                    Expires = DateTimeOffset.UtcNow.AddYears(1)
-                };
-                
-                logger.LogInformation("Setting upstart_session cookie for host: {Host}, IsHttps: {IsHttps}, Domain: {Domain}", 
-                    httpContext.Request.Host, httpContext.Request.IsHttps, cookieOptions.Domain ?? "<not set>");
-                
-                httpContext.Response.Cookies.Append("upstart_session", sessionId, cookieOptions);
-            }
+            // Check for session ID in header first, then fall back to cookie
+            sessionId = httpContext.Request.Headers["X-Session-ID"].FirstOrDefault() 
+                       ?? httpContext.Request.Cookies["upstart_session"];
+            
+            logger.LogInformation("Received session ID for unauthenticated user: {SessionId}", sessionId ?? "<none>");
         }
 
         // Validate the request

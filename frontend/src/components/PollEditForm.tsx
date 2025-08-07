@@ -5,7 +5,7 @@ import Button from './ui/Button';
 import Input from './ui/Input';
 import Card from './ui/Card';
 import { Poll } from '../types';
-import { pollsAPI, pollAnswersAPI } from '../services/api';
+import { pollsAPI } from '../services/api';
 
 interface PollEditFormProps {
   poll: Poll;

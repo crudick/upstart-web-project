@@ -430,7 +430,7 @@ public class AuthRegisterIntegrationTests : IClassFixture<TestWebApplicationFact
         );
         
         var pollClient = _factory.CreateClient();
-        pollClient.DefaultRequestHeaders.Add("Cookie", $"upstart_session={sessionId}");
+        pollClient.DefaultRequestHeaders.Add("X-Session-ID", sessionId);
         
         var pollResponse = await pollClient.PostAsJsonAsync("/api/polls", pollRequest);
         pollResponse.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -450,11 +450,12 @@ public class AuthRegisterIntegrationTests : IClassFixture<TestWebApplicationFact
         // Now register a user with the same session ID
         var registerRequest = new RegisterApiRequest(
             Email: "migration@example.com",
-            Password: "SecurePass123"
+            Password: "SecurePass123",
+            SessionId: sessionId
         );
         
         var registerClient = _factory.CreateClient();
-        registerClient.DefaultRequestHeaders.Add("Cookie", $"upstart_session={sessionId}");
+        // Don't need to set header - session ID will be passed in request body
         
         // Act
         var registerResponse = await registerClient.PostAsJsonAsync("/api/auth/register", registerRequest);
