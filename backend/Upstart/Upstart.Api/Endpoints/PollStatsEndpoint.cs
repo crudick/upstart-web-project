@@ -289,7 +289,7 @@ public static class PollStatsEndpoint
             if (string.IsNullOrEmpty(sessionId))
             {
                 sessionId = Guid.NewGuid().ToString();
-                httpContext.Response.Cookies.Append("upstart_session", sessionId, new CookieOptions
+                var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = httpContext.Request.IsHttps,
@@ -297,7 +297,12 @@ public static class PollStatsEndpoint
                     Domain = httpContext.Request.IsHttps ? ".onrender.com" : null, // Share across subdomains in production
                     Path = "/",
                     Expires = DateTimeOffset.UtcNow.AddYears(1)
-                });
+                };
+                
+                logger.LogInformation("Setting upstart_session cookie for host: {Host}, IsHttps: {IsHttps}, Domain: {Domain}", 
+                    httpContext.Request.Host, httpContext.Request.IsHttps, cookieOptions.Domain ?? "<not set>");
+                
+                httpContext.Response.Cookies.Append("upstart_session", sessionId, cookieOptions);
             }
 
             var serviceRequest = new CreatePollStatRequest(
