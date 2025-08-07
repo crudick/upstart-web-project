@@ -13,7 +13,7 @@ namespace Upstart.Persistence.Migrations
 {
     [DbContext(typeof(UpstartDbContext))]
     [Migration("20250807034122_statsessionid")]
-    partial class statsessionid
+    partial class StatSessionId
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -36,6 +36,9 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
             Question: "What is your favorite color?"
         );
 
+        var sessionId = Guid.NewGuid().ToString();
+        _httpClient.DefaultRequestHeaders.Add("X-Session-ID", sessionId);
+
         // Act
         var response = await _httpClient.PostAsJsonAsync("/api/polls", request);
 
@@ -47,11 +50,10 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
         pollResponse.Should().NotBeNull();
         pollResponse!.Question.Should().Be("What is your favorite color?");
         pollResponse.UserId.Should().BeNull(); // Should be null for unauthenticated
-        pollResponse.SessionId.Should().NotBeNullOrEmpty(); // Should have session ID
+        pollResponse.SessionId.Should().Be(sessionId); // Should match the sent session ID
         
-        // Verify session cookie was set
-        var cookies = response.Headers.Where(h => h.Key == "Set-Cookie").SelectMany(h => h.Value);
-        cookies.Should().Contain(c => c.Contains("upstart_session"));
+        // Clear header for other tests
+        _httpClient.DefaultRequestHeaders.Remove("X-Session-ID");
     }
 
     [Fact]
@@ -428,6 +430,9 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
             Question: "Test question?"
         );
 
+        var sessionId = Guid.NewGuid().ToString();
+        _httpClient.DefaultRequestHeaders.Add("X-Session-ID", sessionId);
+
         // Act
         var response = await _httpClient.PostAsJsonAsync("/api/polls", request);
 
@@ -437,7 +442,11 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
         var pollResponse = await response.Content.ReadFromJsonAsync<PollModel>();
         pollResponse.Should().NotBeNull();
         pollResponse!.UserId.Should().BeNull(); // Should be null for unauthenticated
-        pollResponse.SessionId.Should().NotBeNullOrEmpty(); // Should have session ID
+        pollResponse.SessionId.Should().Be(sessionId); // Should match the sent session ID
+        
+        // Clear headers for other tests
+        _httpClient.DefaultRequestHeaders.Remove("X-Session-ID");
+        _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
     [Fact]
@@ -454,6 +463,9 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
             Question: "Test question?"
         );
 
+        var sessionId = Guid.NewGuid().ToString();
+        _httpClient.DefaultRequestHeaders.Add("X-Session-ID", sessionId);
+
         // Act
         var response = await _httpClient.PostAsJsonAsync("/api/polls", request);
 
@@ -463,7 +475,11 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
         var pollResponse = await response.Content.ReadFromJsonAsync<PollModel>();
         pollResponse.Should().NotBeNull();
         pollResponse!.UserId.Should().BeNull(); // Should be null for unauthenticated
-        pollResponse.SessionId.Should().NotBeNullOrEmpty(); // Should have session ID
+        pollResponse.SessionId.Should().Be(sessionId); // Should match the sent session ID
+        
+        // Clear headers for other tests
+        _httpClient.DefaultRequestHeaders.Remove("X-Session-ID");
+        _httpClient.DefaultRequestHeaders.Authorization = null;
     }
 
     private async Task<string> CreateTestUserAndGetToken(string email = "test@example.com", string password = "TestPassword123")

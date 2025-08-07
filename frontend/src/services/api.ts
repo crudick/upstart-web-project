@@ -46,6 +46,18 @@ export const sessionUtils = {
     return getCookie('upstart_session');
   },
   
+  getOrCreateSessionId(): string {
+    let sessionId = this.getSessionId();
+    if (!sessionId) {
+      sessionId = crypto.randomUUID();
+      // Set cookie with 1 year expiry
+      const expires = new Date();
+      expires.setFullYear(expires.getFullYear() + 1);
+      document.cookie = `upstart_session=${sessionId}; path=/; expires=${expires.toUTCString()}; secure; samesite=lax`;
+    }
+    return sessionId;
+  },
+  
   hasSession(): boolean {
     return this.getSessionId() !== null;
   }
@@ -62,7 +74,8 @@ async function makeApiCall<T>(
   url: string,
   options: RequestInit = {},
   requiresAuth = false,
-  requiresCsrf = true
+  requiresCsrf = true,
+  requiresSession = false
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -84,6 +97,12 @@ async function makeApiCall<T>(
     } catch (error) {
       console.warn('Failed to get CSRF token:', error);
     }
+  }
+
+  // Add session ID header for unauthenticated requests that need session context
+  if (!requiresAuth && (requiresSession || options.method === 'POST' || options.method === 'PUT' || options.method === 'DELETE')) {
+    const sessionId = sessionUtils.getOrCreateSessionId();
+    headers['X-Session-ID'] = sessionId;
   }
 
   // Always include cookies for session management
@@ -152,9 +171,13 @@ export const authAPI = {
   },
 
   async register(userData: RegisterRequest): Promise<AuthResponse> {
+    // Include session ID for poll migration during registration
+    const sessionId = sessionUtils.getSessionId(); // Get existing session if available
+    const requestBody = sessionId ? { ...userData, sessionId } : userData;
+    
     return makeApiCall<AuthResponse>(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
-      body: JSON.stringify(userData),
+      body: JSON.stringify(requestBody),
     });
   },
 
@@ -283,7 +306,9 @@ export const pollStatsAPI = {
       return await makeApiCall<PollStat>(
         `${API_BASE_URL}/api/poll-stats/poll/${pollId}/session/me`,
         {},
-        false
+        false,
+        true,
+        true // requiresSession = true
       );
     } catch (error) {
       if (error instanceof APIError && error.status === 404) {

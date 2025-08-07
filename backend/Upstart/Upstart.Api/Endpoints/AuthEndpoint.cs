@@ -49,8 +49,8 @@ public static class AuthEndpoint
             return Results.BadRequest(validationResult.ToDictionary());
         }
 
-        // Get session ID from cookies if available
-        var sessionId = httpContext.Request.Cookies["upstart_session"];
+        // Get session ID from request body, falling back to cookies if not provided
+        var sessionId = request.SessionId ?? httpContext.Request.Cookies["upstart_session"];
 
         var serviceRequest = new RegisterRequest(
             request.Email,

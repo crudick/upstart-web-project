@@ -188,8 +188,9 @@ public static class PollStatsEndpoint
 
     private static async Task<IResult> GetCurrentSessionPollResponse(int pollId, IPollStatService pollStatService, ILogger<IPollStatService> logger, HttpContext httpContext)
     {
-        var sessionId = httpContext.Request.Cookies["upstart_session"];
-        logger.LogDebug("Retrieved session ID from cookies: {SessionId} for poll ID: {PollId}", sessionId ?? "null", pollId);
+        var sessionId = httpContext.Request.Headers["X-Session-ID"].FirstOrDefault() 
+                       ?? httpContext.Request.Cookies["upstart_session"];
+        logger.LogDebug("Retrieved session ID from header/cookie: {SessionId} for poll ID: {PollId}", sessionId ?? "null", pollId);
         
         if (string.IsNullOrEmpty(sessionId))
         {
@@ -238,7 +239,8 @@ public static class PollStatsEndpoint
             string? sessionId = null;
             if (!userId.HasValue)
             {
-                sessionId = httpContext.Request.Cookies["upstart_session"];
+                sessionId = httpContext.Request.Headers["X-Session-ID"].FirstOrDefault() 
+                           ?? httpContext.Request.Cookies["upstart_session"];
             }
 
             var serviceRequest = new UpdatePollStatRequest(id, request.PollAnswerId);
@@ -284,26 +286,11 @@ public static class PollStatsEndpoint
 
         try
         {
-            // Get or create session ID for unauthenticated users
-            var sessionId = httpContext.Request.Cookies["upstart_session"];
-            if (string.IsNullOrEmpty(sessionId))
-            {
-                sessionId = Guid.NewGuid().ToString();
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = httpContext.Request.IsHttps,
-                    SameSite = SameSiteMode.Lax,
-                    Domain = httpContext.Request.IsHttps ? ".onrender.com" : null, // Share across subdomains in production
-                    Path = "/",
-                    Expires = DateTimeOffset.UtcNow.AddYears(1)
-                };
-                
-                logger.LogInformation("Setting upstart_session cookie for host: {Host}, IsHttps: {IsHttps}, Domain: {Domain}", 
-                    httpContext.Request.Host, httpContext.Request.IsHttps, cookieOptions.Domain ?? "<not set>");
-                
-                httpContext.Response.Cookies.Append("upstart_session", sessionId, cookieOptions);
-            }
+            // Get session ID from header or cookie for unauthenticated users
+            var sessionId = httpContext.Request.Headers["X-Session-ID"].FirstOrDefault() 
+                           ?? httpContext.Request.Cookies["upstart_session"];
+            
+            logger.LogInformation("Received session ID for unauthenticated poll response: {SessionId}", sessionId ?? "<none>");
 
             var serviceRequest = new CreatePollStatRequest(
                 request.PollId,

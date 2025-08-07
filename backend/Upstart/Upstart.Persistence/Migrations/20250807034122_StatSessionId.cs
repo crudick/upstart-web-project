@@ -5,7 +5,7 @@
 namespace Upstart.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class statsessionid : Migration
+    public partial class StatSessionId : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
