@@ -56,11 +56,8 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  firstName: string;
-  lastName: string;
   email: string;
   password: string;
-  phoneNumber?: string;
 }
 
 export interface CreatePollRequest {
