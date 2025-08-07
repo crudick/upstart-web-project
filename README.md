@@ -119,7 +119,7 @@ erDiagram
 UpPoll provides a comprehensive RESTful API with full OpenAPI 3.0 specification.
 
 ### 📚 **Interactive API Documentation**
-**🔗 [View Live API Documentation](https://crudick.github.io/upstart-web-project/)**
+**🔗 [View API Documentation](https://github.com/crudick/upstart-web-project/blob/main/docs/api-docs.html)**
 
 The API documentation is built with Redoc and provides:
 - Interactive endpoint testing
