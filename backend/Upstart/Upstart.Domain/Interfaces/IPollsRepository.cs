@@ -12,4 +12,6 @@ public interface IPollsRepository
     Task<IEnumerable<PollModel>> GetActiveAsync();
     Task<PollModel> UpdateAsync(PollModel poll);
     Task DeleteAsync(int id);
+    Task<IEnumerable<PollModel>> GetBySessionIdAsync(string sessionId);
+    Task<int> MigratePollsFromSessionToUserAsync(string sessionId, int userId);
 }

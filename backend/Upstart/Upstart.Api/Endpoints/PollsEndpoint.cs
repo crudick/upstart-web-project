@@ -18,8 +18,7 @@ public static class PollsEndpoint
             .WithName("CreatePoll")
             .WithSummary("Create a new poll")
             .Produces(201)
-            .Produces(400)
-            .RequireAuthorization();
+            .Produces(400);
 
         group.MapGet("/{id:int}", GetPollById)
             .WithName("GetPollById")
@@ -73,25 +72,61 @@ public static class PollsEndpoint
             .Produces(204)
             .Produces(404)
             .RequireAuthorization();
+
+        group.MapPut("/{id:int}/answers", ReplaceAnswersForPoll)
+            .WithName("ReplaceAnswersForPoll")
+            .WithSummary("Replace all answers for a poll")
+            .Produces(200)
+            .Produces(400)
+            .Produces(404)
+            .RequireAuthorization();
     }
 
     private static async Task<IResult> CreatePoll(CreatePollApiRequest request, IPollService pollService, IValidator<CreatePollApiRequest> validator, IMapper mapper, ILogger<IPollService> logger, HttpContext httpContext)
     {
         logger.LogInformation("Creating poll: {Question}", request.Question);
 
-        var userId = httpContext.GetUserId();
+        // Try to get user ID if authenticated, otherwise null
+        int? userId = null;
+        try
+        {
+            userId = httpContext.GetUserId();
+        }
+        catch
+        {
+            // User is not authenticated, which is fine for unauthenticated polls
+        }
+
+        // For unauthenticated users, get or create session ID
+        string? sessionId = null;
+        if (userId == null)
+        {
+            sessionId = httpContext.Request.Cookies["upstart_session"];
+            if (string.IsNullOrEmpty(sessionId))
+            {
+                sessionId = Guid.NewGuid().ToString();
+                httpContext.Response.Cookies.Append("upstart_session", sessionId, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = httpContext.Request.IsHttps,
+                    SameSite = SameSiteMode.Lax,
+                    Expires = DateTimeOffset.UtcNow.AddYears(1)
+                });
+            }
+        }
 
         // Validate the request
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
-            logger.LogWarning("Poll creation validation failed for user: {UserId}. Errors: {@ValidationErrors}",
-                userId, validationResult.Errors);
+            logger.LogWarning("Poll creation validation failed for user: {UserId}, session: {SessionId}. Errors: {@ValidationErrors}",
+                userId, sessionId, validationResult.Errors);
             return Results.BadRequest(validationResult.ToDictionary());
         }
 
         var serviceRequest = new CreatePollRequest(
             userId,
+            sessionId,
             request.Question,
             request.IsActive,
             request.IsMultipleChoice,
@@ -100,8 +135,8 @@ public static class PollsEndpoint
         
         var result = await pollService.CreatePollAsync(serviceRequest);
 
-        logger.LogInformation("Poll created successfully with ID: {PollId} and GUID: {PollGuid}",
-            result.Id, result.PollGuid);
+        logger.LogInformation("Poll created successfully with ID: {PollId} and GUID: {PollGuid}, UserId: {UserId}, SessionId: {SessionId}",
+            result.Id, result.PollGuid, userId, sessionId);
 
         return Results.Created($"/api/polls/{result.Id}", result);
     }
@@ -175,9 +210,11 @@ public static class PollsEndpoint
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> UpdatePoll(int id, UpdatePollApiRequest request, IPollService pollService, IValidator<UpdatePollApiRequest> validator, IMapper mapper, ILogger<IPollService> logger)
+    private static async Task<IResult> UpdatePoll(int id, UpdatePollApiRequest request, IPollService pollService, IValidator<UpdatePollApiRequest> validator, IMapper mapper, ILogger<IPollService> logger, HttpContext httpContext)
     {
         logger.LogInformation("Updating poll with ID: {PollId}", id);
+
+        var userId = httpContext.GetUserId();
 
         var validationResult = await validator.ValidateAsync(request);
         if (!validationResult.IsValid)
@@ -187,18 +224,23 @@ public static class PollsEndpoint
             return Results.BadRequest(validationResult.ToDictionary());
         }
 
-        var serviceRequest = new UpdatePollRequest(id, request.Question, request.IsActive, request.IsMultipleChoice, request.ExpiresAt);
+        var serviceRequest = new UpdatePollRequest(id, request.Question, request.IsActive, request.IsMultipleChoice, request.RequiresAuthentication, request.ExpiresAt);
         
         try
         {
-            var result = await pollService.UpdatePollAsync(serviceRequest);
-            logger.LogInformation("Poll updated successfully with ID: {PollId}", result.Id);
+            var result = await pollService.UpdatePollAsync(serviceRequest, userId);
+            logger.LogInformation("Poll updated successfully with ID: {PollId} by user: {UserId}", result.Id, userId);
             return Results.Ok(result);
         }
         catch (InvalidOperationException ex)
         {
             logger.LogWarning("Poll update failed: {ErrorMessage}", ex.Message);
             return Results.NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            logger.LogWarning("Poll update unauthorized: {ErrorMessage}", ex.Message);
+            return Results.Forbid();
         }
     }
 
@@ -210,5 +252,29 @@ public static class PollsEndpoint
         logger.LogInformation("Poll deleted successfully with ID: {PollId}", id);
 
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> ReplaceAnswersForPoll(int id, List<string> answers, IPollService pollService, ILogger<IPollService> logger, HttpContext httpContext)
+    {
+        logger.LogInformation("Replacing answers for poll with ID: {PollId}", id);
+
+        var userId = httpContext.GetUserId();
+
+        try
+        {
+            await pollService.ReplaceAnswersForPollAsync(id, userId, answers);
+            logger.LogInformation("Answers replaced successfully for poll ID: {PollId} by user: {UserId}", id, userId);
+            return Results.Ok();
+        }
+        catch (InvalidOperationException ex)
+        {
+            logger.LogWarning("Poll answers replace failed: {ErrorMessage}", ex.Message);
+            return Results.NotFound(ex.Message);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            logger.LogWarning("Poll answers replace unauthorized: {ErrorMessage}", ex.Message);
+            return Results.Forbid();
+        }
     }
 }

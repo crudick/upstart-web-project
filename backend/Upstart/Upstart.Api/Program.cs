@@ -55,7 +55,8 @@ try
         {
             policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
-                  .AllowAnyMethod();
+                  .AllowAnyMethod()
+                  .AllowCredentials();
         });
     });
 
@@ -103,6 +104,16 @@ try
 
     builder.Services.AddAuthorization();
 
+    // Add CSRF protection
+    builder.Services.AddAntiforgery(options =>
+    {
+        options.HeaderName = "X-CSRF-TOKEN";
+        options.Cookie.Name = "__Host-X-CSRF-TOKEN";
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+        options.Cookie.HttpOnly = true;
+    });
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline.
@@ -135,6 +146,7 @@ try
     app.UseAuthorization();
 
     // Map endpoints
+    app.MapCsrfEndpoints();
     app.MapAuthEndpoints();
     app.MapUsersEndpoints();
     app.MapPollsEndpoints();

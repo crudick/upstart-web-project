@@ -4,7 +4,8 @@ namespace Upstart.Application.Services;
 
 public record RegisterRequest(
     string Email,
-    string Password
+    string Password,
+    string? SessionId = null
 );
 
 public record LoginRequest(

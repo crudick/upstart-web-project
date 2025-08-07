@@ -77,10 +77,36 @@ public class PollsRepository : IPollsRepository
 
     public async Task<PollModel> UpdateAsync(PollModel poll)
     {
-        var entity = MapToEntity(poll);
-        _context.Set<PollEntity>().Update(entity);
+        // First check if the entity is already being tracked
+        var trackedEntity = _context.ChangeTracker.Entries<PollEntity>()
+            .FirstOrDefault(e => e.Entity.Id == poll.Id);
+
+        PollEntity entityToUpdate;
+        
+        if (trackedEntity != null)
+        {
+            // Update the already tracked entity
+            entityToUpdate = trackedEntity.Entity;
+            entityToUpdate.PollGuid = poll.PollGuid;
+            entityToUpdate.UserId = poll.UserId;
+            entityToUpdate.SessionId = poll.SessionId;
+            entityToUpdate.Question = poll.Question;
+            entityToUpdate.IsActive = poll.IsActive;
+            entityToUpdate.IsMultipleChoice = poll.IsMultipleChoice;
+            entityToUpdate.RequiresAuthentication = poll.RequiresAuthentication;
+            entityToUpdate.ExpiresAt = poll.ExpiresAt;
+            entityToUpdate.CreatedAt = poll.CreatedAt;
+            entityToUpdate.UpdatedAt = poll.UpdatedAt;
+        }
+        else
+        {
+            // No tracked entity, create new one and attach it
+            entityToUpdate = MapToEntity(poll);
+            _context.Set<PollEntity>().Update(entityToUpdate);
+        }
+
         await _context.SaveChangesAsync();
-        return MapToModel(entity);
+        return MapToModel(entityToUpdate);
     }
 
     public async Task DeleteAsync(int id)
@@ -93,6 +119,34 @@ public class PollsRepository : IPollsRepository
         }
     }
 
+    public async Task<IEnumerable<PollModel>> GetBySessionIdAsync(string sessionId)
+    {
+        var entities = await _context.Set<PollEntity>()
+            .Include(p => p.Answers)
+            .Include(p => p.User)
+            .Include(p => p.Stats)
+            .Where(p => p.SessionId == sessionId)
+            .ToListAsync();
+        return entities.Select(MapToModel);
+    }
+
+    public async Task<int> MigratePollsFromSessionToUserAsync(string sessionId, int userId)
+    {
+        var pollsToMigrate = await _context.Set<PollEntity>()
+            .Where(p => p.SessionId == sessionId && p.UserId == null)
+            .ToListAsync();
+
+        foreach (var poll in pollsToMigrate)
+        {
+            poll.UserId = userId;
+            poll.SessionId = null;
+            poll.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+        return pollsToMigrate.Count;
+    }
+
     private static PollEntity MapToEntity(PollModel model)
     {
         return new PollEntity
@@ -100,6 +154,7 @@ public class PollsRepository : IPollsRepository
             Id = model.Id,
             PollGuid = model.PollGuid,
             UserId = model.UserId,
+            SessionId = model.SessionId,
             Question = model.Question,
             IsActive = model.IsActive,
             IsMultipleChoice = model.IsMultipleChoice,
@@ -117,6 +172,7 @@ public class PollsRepository : IPollsRepository
             Id = entity.Id,
             PollGuid = entity.PollGuid,
             UserId = entity.UserId,
+            SessionId = entity.SessionId,
             Question = entity.Question,
             IsActive = entity.IsActive,
             IsMultipleChoice = entity.IsMultipleChoice,

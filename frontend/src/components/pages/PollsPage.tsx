@@ -7,10 +7,12 @@ import {
   TrashIcon,
   ShareIcon,
   ClockIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  PencilIcon
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import PollEditForm from '../PollEditForm';
 import { Poll } from '../../types';
 import { pollsAPI } from '../../services/api';
 
@@ -23,6 +25,7 @@ const PollsPage: React.FC<PollsPageProps> = ({ onCreatePoll, onViewPoll }) => {
   const [polls, setPolls] = useState<Poll[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingPollId, setDeletingPollId] = useState<number | null>(null);
+  const [editingPoll, setEditingPoll] = useState<Poll | null>(null);
 
   useEffect(() => {
     fetchUserPolls();
@@ -66,6 +69,15 @@ const PollsPage: React.FC<PollsPageProps> = ({ onCreatePoll, onViewPoll }) => {
       // Fallback for browsers that don't support clipboard API
       prompt('Copy this link to share your poll:', pollUrl);
     }
+  };
+
+  const handleEditPoll = (poll: Poll) => {
+    setEditingPoll(poll);
+  };
+
+  const handlePollUpdated = (updatedPoll: Poll) => {
+    setPolls(polls.map(poll => poll.id === updatedPoll.id ? updatedPoll : poll));
+    setEditingPoll(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -267,6 +279,15 @@ const PollsPage: React.FC<PollsPageProps> = ({ onCreatePoll, onViewPoll }) => {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => handleEditPoll(poll)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </Button>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleSharePoll(poll.pollGuid)}
                       >
                         <ShareIcon className="w-4 h-4" />
@@ -292,6 +313,15 @@ const PollsPage: React.FC<PollsPageProps> = ({ onCreatePoll, onViewPoll }) => {
             );
           })}
         </div>
+      )}
+
+      {/* Edit Poll Modal */}
+      {editingPoll && (
+        <PollEditForm
+          poll={editingPoll}
+          onClose={() => setEditingPoll(null)}
+          onPollUpdated={handlePollUpdated}
+        />
       )}
     </div>
   );

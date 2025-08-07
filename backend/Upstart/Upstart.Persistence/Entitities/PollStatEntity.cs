@@ -21,6 +21,10 @@ public class PollStatEntity
     [Column("user_id")]
     public int? UserId { get; set; }
 
+    [Column("session_id")]
+    [MaxLength(255)]
+    public string? SessionId { get; set; }
+
     [Column("selected_at")]
     public DateTime SelectedAt { get; set; } = DateTime.UtcNow;
 

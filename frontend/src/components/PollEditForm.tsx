@@ -18,6 +18,7 @@ const PollEditForm: React.FC<PollEditFormProps> = ({ poll, onClose, onPollUpdate
     question: poll.question,
     expiresAt: poll.expiresAt ? new Date(poll.expiresAt).toISOString().slice(0, 16) : '',
     allowMultipleResponses: poll.allowMultipleResponses || false,
+    requiresAuthentication: poll.requiresAuthentication || false,
     answers: poll.answers.map(a => a.answerText),
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -41,19 +42,11 @@ const PollEditForm: React.FC<PollEditFormProps> = ({ poll, onClose, onPollUpdate
         question: formData.question.trim(),
         expiresAt: formData.expiresAt || undefined,
         allowMultipleResponses: formData.allowMultipleResponses,
+        requiresAuthentication: formData.requiresAuthentication,
       });
 
-      // Handle answer updates (this is simplified - in a real app you'd want to be more surgical)
-      // Delete existing answers and create new ones
-      const existingAnswers = await pollAnswersAPI.getPollAnswers(poll.id);
-      await Promise.all(existingAnswers.map(answer => pollAnswersAPI.deletePollAnswer(answer.id)));
-
-      // Create new answers
-      await Promise.all(
-        validAnswers.map((answerText, index) =>
-          pollAnswersAPI.createPollAnswer(poll.id, answerText.trim(), index + 1)
-        )
-      );
+      // Replace all answers with new ones using the secure endpoint
+      await pollsAPI.replaceAnswersForPoll(poll.id, validAnswers);
 
       // Fetch the complete updated poll with answers
       const refreshedPoll = await pollsAPI.getPollByGuid(poll.pollGuid);
@@ -197,6 +190,19 @@ const PollEditForm: React.FC<PollEditFormProps> = ({ poll, onClose, onPollUpdate
                 />
                 <label htmlFor="allowMultiple" className="text-sm font-medium text-gray-700 font-montserrat">
                   Allow multiple responses per user
+                </label>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="requireAuth"
+                  checked={formData.requiresAuthentication}
+                  onChange={(e) => setFormData({ ...formData, requiresAuthentication: e.target.checked })}
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
+                />
+                <label htmlFor="requireAuth" className="text-sm font-medium text-gray-700 font-montserrat">
+                  Require users to sign in before voting
                 </label>
               </div>
 

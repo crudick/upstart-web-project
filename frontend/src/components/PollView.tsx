@@ -49,14 +49,19 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
       const answersData = await pollAnswersAPI.getPollAnswers(pollData.id);
       setAnswers(answersData);
 
-      // Check if user has already responded (only if authenticated)
+      // Check if user has already responded
+      let existingResponse = null;
       if (isAuthenticated && user) {
-        const existingResponse = await pollStatsAPI.getUserPollResponse(pollData.id);
-        setUserResponse(existingResponse);
-
-        if (existingResponse) {
-          setSelectedAnswers([existingResponse.pollAnswerId]);
-        }
+        // For authenticated users, check by user ID
+        existingResponse = await pollStatsAPI.getUserPollResponse(pollData.id);
+      } else {
+        // For unauthenticated users, check by session ID
+        existingResponse = await pollStatsAPI.getSessionPollResponse(pollData.id);
+      }
+      
+      setUserResponse(existingResponse);
+      if (existingResponse) {
+        setSelectedAnswers([existingResponse.pollAnswerId]);
       }
     } catch (error: any) {
       console.error('Error loading poll:', error);
@@ -71,15 +76,18 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
   }, [loadPoll]);
 
   const handleAnswerSelect = (answerId: number) => {
-    if (!poll || userResponse) return;
+    if (!poll) return;
 
     if (poll.allowMultipleResponses) {
+      // For multi-select, allow toggling any answer on/off
       setSelectedAnswers(prev => 
         prev.includes(answerId) 
           ? prev.filter(id => id !== answerId)
           : [...prev, answerId]
       );
     } else {
+      // For single-select, always set to the clicked answer
+      // This will automatically unselect any previously selected answer
       setSelectedAnswers([answerId]);
     }
   };
@@ -95,20 +103,33 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
 
     setSubmitting(true);
     try {
-      // For now, just submit the first selected answer
-      // In a real implementation, you'd handle multiple answers
-      if (poll.requiresAuthentication || isAuthenticated) {
-        await pollStatsAPI.submitVote(poll.id, selectedAnswers[0]);
+      // If user has already responded, update their response
+      if (userResponse) {
+        await pollStatsAPI.updatePollResponse(userResponse.id, selectedAnswers[0]);
+        // Reload the poll to get updated response
+        await loadPoll();
       } else {
-        await pollStatsAPI.submitAnonymousVote(poll.id, selectedAnswers[0]);
+        // Submit new vote
+        if (poll.requiresAuthentication || isAuthenticated) {
+          await pollStatsAPI.submitVote(poll.id, selectedAnswers[0]);
+        } else {
+          await pollStatsAPI.submitAnonymousVote(poll.id, selectedAnswers[0]);
+        }
+        
+        setShowThankYou(true);
+        setTimeout(() => {
+          if (onViewResults) {
+            onViewResults();
+          }
+        }, 2000);
+        return;
       }
       
+      // For updates, show a brief success message
       setShowThankYou(true);
       setTimeout(() => {
-        if (onViewResults) {
-          onViewResults();
-        }
-      }, 2000);
+        setShowThankYou(false);
+      }, 1500);
     } catch (error: any) {
       console.error('Error submitting vote:', error);
       setError(error.message || 'Failed to submit vote');
@@ -163,7 +184,7 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
 
   const isExpired = poll?.expiresAt && new Date(poll.expiresAt) < new Date();
   const requiresAuth = poll?.requiresAuthentication;
-  const canVote = (!requiresAuth || isAuthenticated) && !userResponse && !isExpired;
+  const canVote = (!requiresAuth || isAuthenticated) && !isExpired;
   const isOwner = isAuthenticated && poll?.user?.id === user?.id;
   const hasVotes = poll?.stats && poll.stats.length > 0;
   const canEdit = isOwner && !hasVotes;
@@ -223,7 +244,7 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
             Thank You!
           </h2>
           <p className="text-gray-600 font-montserrat mb-6">
-            Your vote has been recorded. Redirecting to results...
+            {userResponse ? 'Your vote has been updated.' : 'Your vote has been recorded. Redirecting to results...'}
           </p>
           <div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
         </Card>
@@ -330,9 +351,9 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
         )}
 
         {userResponse && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-upstart">
-            <p className="text-sm text-green-800 font-montserrat">
-              ✓ You have already voted on this poll.
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-upstart">
+            <p className="text-sm text-blue-800 font-montserrat">
+              ✓ You have already voted on this poll. You can change your answer by selecting a different option and clicking "Update Vote".
             </p>
           </div>
         )}
@@ -369,7 +390,7 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
                   onClick={() => handleAnswerSelect(answer.id)}
                   disabled={!canVote}
                   className={`w-full p-4 text-left border-2 rounded-upstart transition-all duration-200 ${
-                    isSelected || isUserAnswer
+                    isSelected
                       ? 'border-primary-500 bg-primary-50'
                       : 'border-gray-200 hover:border-gray-300'
                   } ${
@@ -381,11 +402,11 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
                       <div className={`w-4 h-4 border-2 rounded ${
                         poll.allowMultipleResponses ? 'rounded-sm' : 'rounded-full'
                       } ${
-                        isSelected || isUserAnswer
+                        isSelected
                           ? 'bg-primary-500 border-primary-500'
                           : 'border-gray-300'
                       }`}>
-                        {(isSelected || isUserAnswer) && (
+                        {isSelected && (
                           <div className="w-full h-full flex items-center justify-center">
                             {poll.allowMultipleResponses ? (
                               <CheckCircleIcon className="w-3 h-3 text-white" />
@@ -399,7 +420,7 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
                         {answer.answerText}
                       </span>
                     </div>
-                    {isUserAnswer && (
+                    {isUserAnswer && isSelected && (
                       <CheckCircleIcon className="w-5 h-5 text-primary-600" />
                     )}
                   </div>
@@ -416,10 +437,10 @@ const PollView: React.FC<PollViewProps> = ({ pollGuid, onViewResults }) => {
               onClick={handleSubmitVote}
               variant="primary"
               isLoading={submitting}
-              disabled={selectedAnswers.length === 0}
+              disabled={selectedAnswers.length === 0 || (userResponse != null && selectedAnswers.length > 0 && selectedAnswers[0] === userResponse.pollAnswerId)}
               className="flex-1"
             >
-              Submit Vote
+              {userResponse ? 'Update Vote' : 'Submit Vote'}
             </Button>
           )}
           

@@ -18,8 +18,7 @@ public static class PollAnswersEndpoint
             .WithName("CreatePollAnswer")
             .WithSummary("Create a new poll answer")
             .Produces(201)
-            .Produces(400)
-            .RequireAuthorization();
+            .Produces(400);
 
         group.MapGet("/{id:int}", GetPollAnswerById)
             .WithName("GetPollAnswerById")
