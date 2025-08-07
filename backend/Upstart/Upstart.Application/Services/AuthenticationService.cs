@@ -14,12 +14,14 @@ namespace Upstart.Application.Services;
 public class AuthenticationService : IAuthenticationService
 {
     private readonly IUsersRepository _usersRepository;
+    private readonly IPollService _pollService;
     private readonly ILogger<AuthenticationService> _logger;
     private readonly IConfiguration _configuration;
 
-    public AuthenticationService(IUsersRepository usersRepository, ILogger<AuthenticationService> logger, IConfiguration configuration)
+    public AuthenticationService(IUsersRepository usersRepository, IPollService pollService, ILogger<AuthenticationService> logger, IConfiguration configuration)
     {
         _usersRepository = usersRepository;
+        _pollService = pollService;
         _logger = logger;
         _configuration = configuration;
     }
@@ -58,6 +60,26 @@ public class AuthenticationService : IAuthenticationService
             };
 
             var createdUser = await _usersRepository.CreateAsync(newUser);
+
+            // Migrate polls from session to user if session ID is provided
+            if (!string.IsNullOrEmpty(request.SessionId))
+            {
+                try
+                {
+                    var migratedCount = await _pollService.MigratePollsFromSessionToUserAsync(request.SessionId, createdUser.Id);
+                    if (migratedCount > 0)
+                    {
+                        _logger.LogInformation("Migrated {Count} polls from session {SessionId} to user {UserId}", 
+                            migratedCount, request.SessionId, createdUser.Id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error migrating polls from session {SessionId} to user {UserId}", 
+                        request.SessionId, createdUser.Id);
+                    // Don't fail registration if poll migration fails
+                }
+            }
 
             // Generate JWT token
             var token = GenerateJwtToken(createdUser.Email, createdUser.Id, createdUser.FirstName, createdUser.LastName);

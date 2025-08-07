@@ -36,7 +36,7 @@ public static class AuthEndpoint
             .Produces(404);
     }
 
-    private static async Task<IResult> Register(RegisterApiRequest request, IAuthenticationService authService, IValidator<RegisterApiRequest> validator, IMapper mapper, ILogger<IAuthenticationService> logger)
+    private static async Task<IResult> Register(RegisterApiRequest request, IAuthenticationService authService, IValidator<RegisterApiRequest> validator, IMapper mapper, ILogger<IAuthenticationService> logger, HttpContext httpContext)
     {
         logger.LogInformation("Registration attempt for email: {Email}", request.Email);
 
@@ -49,9 +49,13 @@ public static class AuthEndpoint
             return Results.BadRequest(validationResult.ToDictionary());
         }
 
+        // Get session ID from cookies if available
+        var sessionId = httpContext.Request.Cookies["upstart_session"];
+
         var serviceRequest = new RegisterRequest(
             request.Email,
-            request.Password
+            request.Password,
+            sessionId
         );
 
         var result = await authService.RegisterAsync(serviceRequest);

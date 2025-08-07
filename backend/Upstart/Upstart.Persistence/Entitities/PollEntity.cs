@@ -15,8 +15,11 @@ public class PollEntity
     public string PollGuid { get; set; } = string.Empty;
 
     [Column("user_id")]
-    [Required]
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
+
+    [Column("session_id")]
+    [MaxLength(255)]
+    public string? SessionId { get; set; }
 
     [Column("question")]
     [MaxLength(500)]
@@ -42,7 +45,7 @@ public class PollEntity
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     [ForeignKey("UserId")]
-    public UserEntity User { get; set; } = null!;
+    public UserEntity? User { get; set; }
 
     public ICollection<PollAnswerEntity> Answers { get; set; } = new List<PollAnswerEntity>();
 

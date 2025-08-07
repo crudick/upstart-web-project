@@ -27,7 +27,7 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
     }
 
     [Fact]
-    public async Task PostPolls_WithoutAuthentication_ShouldReturn401()
+    public async Task PostPolls_WithoutAuthentication_ShouldReturn201AndCreatePollWithSession()
     {
         // Arrange
         ClearDatabase();
@@ -40,7 +40,18 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
         var response = await _httpClient.PostAsJsonAsync("/api/polls", request);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        // Verify the poll was created
+        var pollResponse = await response.Content.ReadFromJsonAsync<PollModel>();
+        pollResponse.Should().NotBeNull();
+        pollResponse!.Question.Should().Be("What is your favorite color?");
+        pollResponse.UserId.Should().BeNull(); // Should be null for unauthenticated
+        pollResponse.SessionId.Should().NotBeNullOrEmpty(); // Should have session ID
+        
+        // Verify session cookie was set
+        var cookies = response.Headers.Where(h => h.Key == "Set-Cookie").SelectMany(h => h.Value);
+        cookies.Should().Contain(c => c.Contains("upstart_session"));
     }
 
     [Fact]
@@ -407,7 +418,7 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
     }
 
     [Fact]
-    public async Task PostPolls_WithInvalidToken_ShouldReturn401()
+    public async Task PostPolls_WithInvalidToken_ShouldReturn201AndTreatAsUnauthenticated()
     {
         // Arrange
         ClearDatabase();
@@ -420,12 +431,17 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
         // Act
         var response = await _httpClient.PostAsJsonAsync("/api/polls", request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        // Assert - Invalid tokens are ignored and treated as unauthenticated requests
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        var pollResponse = await response.Content.ReadFromJsonAsync<PollModel>();
+        pollResponse.Should().NotBeNull();
+        pollResponse!.UserId.Should().BeNull(); // Should be null for unauthenticated
+        pollResponse.SessionId.Should().NotBeNullOrEmpty(); // Should have session ID
     }
 
     [Fact]
-    public async Task PostPolls_WithExpiredToken_ShouldReturn401()
+    public async Task PostPolls_WithExpiredToken_ShouldReturn201AndTreatAsUnauthenticated()
     {
         // Arrange
         ClearDatabase();
@@ -441,8 +457,13 @@ public class PollCreationIntegrationTests : IClassFixture<TestWebApplicationFact
         // Act
         var response = await _httpClient.PostAsJsonAsync("/api/polls", request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        // Assert - Expired/malformed tokens are ignored and treated as unauthenticated
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        
+        var pollResponse = await response.Content.ReadFromJsonAsync<PollModel>();
+        pollResponse.Should().NotBeNull();
+        pollResponse!.UserId.Should().BeNull(); // Should be null for unauthenticated
+        pollResponse.SessionId.Should().NotBeNullOrEmpty(); // Should have session ID
     }
 
     private async Task<string> CreateTestUserAndGetToken(string email = "test@example.com", string password = "TestPassword123")

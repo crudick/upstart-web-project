@@ -65,6 +65,40 @@ public class PollStatsRepository : IPollStatsRepository
         return entity != null ? MapToModel(entity) : null;
     }
 
+    public async Task<PollStatModel?> GetSessionResponseAsync(int pollId, string sessionId)
+    {
+        var entity = await _context.Set<PollStatEntity>()
+            .Include(ps => ps.Poll)
+            .Include(ps => ps.PollAnswer)
+            .Include(ps => ps.User)
+            .FirstOrDefaultAsync(ps => ps.PollId == pollId && ps.SessionId == sessionId);
+        
+        return entity != null ? MapToModel(entity) : null;
+    }
+
+    public async Task<PollStatModel> UpdateAsync(PollStatModel pollStat)
+    {
+        var trackedEntity = _context.ChangeTracker.Entries<PollStatEntity>()
+            .FirstOrDefault(e => e.Entity.Id == pollStat.Id);
+
+        PollStatEntity entityToUpdate;
+        
+        if (trackedEntity != null)
+        {
+            entityToUpdate = trackedEntity.Entity;
+            entityToUpdate.PollAnswerId = pollStat.PollAnswerId;
+            entityToUpdate.SelectedAt = pollStat.SelectedAt;
+        }
+        else
+        {
+            entityToUpdate = MapToEntity(pollStat);
+            _context.Set<PollStatEntity>().Update(entityToUpdate);
+        }
+
+        await _context.SaveChangesAsync();
+        return MapToModel(entityToUpdate);
+    }
+
     public async Task<IEnumerable<PollStatModel>> GetPollResultsAsync(int pollId)
     {
         var entities = await _context.Set<PollStatEntity>()
@@ -108,6 +142,7 @@ public class PollStatsRepository : IPollStatsRepository
             PollId = model.PollId,
             PollAnswerId = model.PollAnswerId,
             UserId = model.UserId,
+            SessionId = model.SessionId,
             SelectedAt = model.SelectedAt
         };
     }
@@ -120,6 +155,7 @@ public class PollStatsRepository : IPollStatsRepository
             PollId = entity.PollId,
             PollAnswerId = entity.PollAnswerId,
             UserId = entity.UserId,
+            SessionId = entity.SessionId,
             SelectedAt = entity.SelectedAt
         };
     }

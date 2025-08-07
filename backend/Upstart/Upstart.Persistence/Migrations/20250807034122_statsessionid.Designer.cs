@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Upstart.Persistence.Data;
@@ -11,9 +12,11 @@ using Upstart.Persistence.Data;
 namespace Upstart.Persistence.Migrations
 {
     [DbContext(typeof(UpstartDbContext))]
-    partial class UpstartDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250807034122_statsessionid")]
+    partial class statsessionid
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

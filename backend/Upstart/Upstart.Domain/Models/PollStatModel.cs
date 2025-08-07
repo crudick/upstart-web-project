@@ -6,6 +6,7 @@ public class PollStatModel
     public int PollId { get; set; }
     public int PollAnswerId { get; set; }
     public int? UserId { get; set; }
+    public string? SessionId { get; set; }
     public DateTime SelectedAt { get; set; }
     public PollModel? Poll { get; set; }
     public PollAnswerModel? PollAnswer { get; set; }

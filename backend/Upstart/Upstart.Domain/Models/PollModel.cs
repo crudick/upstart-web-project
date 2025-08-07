@@ -4,7 +4,8 @@ public class PollModel
 {
     public int Id { get; set; }
     public string PollGuid { get; set; } = string.Empty;
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
+    public string? SessionId { get; set; }
     public string Question { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
     public bool IsMultipleChoice { get; set; } = false;

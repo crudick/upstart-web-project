@@ -13,6 +13,44 @@ import {
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5166';
 
+// CSRF token management
+let csrfToken: string | null = null;
+
+const getCsrfToken = async (): Promise<string> => {
+  if (!csrfToken) {
+    const response = await fetch(`${API_BASE_URL}/api/csrf/token`, {
+      credentials: 'include',
+    });
+    const data = await response.json();
+    csrfToken = data.token;
+  }
+  return csrfToken!; // Non-null assertion since we just set it above
+};
+
+// Reset CSRF token (call this when token becomes invalid)
+export const resetCsrfToken = () => {
+  csrfToken = null;
+};
+
+// Utility function to get cookie value
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+// Session management utilities
+export const sessionUtils = {
+  getSessionId(): string | null {
+    return getCookie('upstart_session');
+  },
+  
+  hasSession(): boolean {
+    return this.getSessionId() !== null;
+  }
+};
+
 class APIError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -23,7 +61,8 @@ class APIError extends Error {
 async function makeApiCall<T>(
   url: string,
   options: RequestInit = {},
-  requiresAuth = false
+  requiresAuth = false,
+  requiresCsrf = true
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -37,17 +76,47 @@ async function makeApiCall<T>(
     }
   }
 
+  // Add CSRF token for state-changing operations
+  if (requiresCsrf && (options.method === 'POST' || options.method === 'PUT' || options.method === 'DELETE')) {
+    try {
+      const token = await getCsrfToken();
+      headers['X-CSRF-TOKEN'] = token;
+    } catch (error) {
+      console.warn('Failed to get CSRF token:', error);
+    }
+  }
+
+  // Always include cookies for session management
+  const requestOptions: RequestInit = {
+    ...options,
+    headers,
+    credentials: 'include',
+  };
+
   try {
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    const response = await fetch(url, requestOptions);
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.message || errorData.error || errorMessage;
+        
+        // Handle validation errors (dictionary format from FluentValidation)
+        if (typeof errorData === 'object' && errorData !== null && !errorData.message && !errorData.error) {
+          // Extract validation errors from dictionary format
+          const validationErrors: string[] = [];
+          Object.values(errorData).forEach((errors: any) => {
+            if (Array.isArray(errors)) {
+              validationErrors.push(...errors);
+            }
+          });
+          if (validationErrors.length > 0) {
+            errorMessage = validationErrors.join(', ');
+          }
+        } else {
+          // Handle standard error format
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        }
       } catch {
         try {
           errorMessage = await response.text() || errorMessage;
@@ -111,7 +180,6 @@ export const pollsAPI = {
   async createPoll(pollData: CreatePollRequest): Promise<Poll> {
     // Transform frontend request to backend format
     const backendRequest = {
-      userId: 0, // This will be set by the backend from JWT token
       question: pollData.question,
       isActive: true,
       isMultipleChoice: pollData.allowMultipleResponses || false,
@@ -122,7 +190,7 @@ export const pollsAPI = {
     return makeApiCall<Poll>(`${API_BASE_URL}/api/polls`, {
       method: 'POST',
       body: JSON.stringify(backendRequest),
-    }, true);
+    }, false); // Changed from true to false - no auth required
   },
 
   async updatePoll(pollId: number, pollData: Partial<CreatePollRequest>): Promise<Poll> {
@@ -146,6 +214,13 @@ export const pollsAPI = {
       method: 'DELETE',
     }, true);
   },
+
+  async replaceAnswersForPoll(pollId: number, answers: string[]): Promise<void> {
+    return makeApiCall<void>(`${API_BASE_URL}/api/polls/${pollId}/answers`, {
+      method: 'PUT',
+      body: JSON.stringify(answers),
+    }, true);
+  },
 };
 
 // Poll Answers API
@@ -158,7 +233,7 @@ export const pollAnswersAPI = {
     return makeApiCall<PollAnswer>(`${API_BASE_URL}/api/poll-answers`, {
       method: 'POST',
       body: JSON.stringify({ pollId, answerText, displayOrder }),
-    }, true);
+    }, false); // Changed from true to false - no auth required
   },
 
   async deletePollAnswer(answerId: number): Promise<void> {
@@ -201,6 +276,28 @@ export const pollStatsAPI = {
       }
       throw error;
     }
+  },
+
+  async getSessionPollResponse(pollId: number): Promise<PollStat | null> {
+    try {
+      return await makeApiCall<PollStat>(
+        `${API_BASE_URL}/api/poll-stats/poll/${pollId}/session/me`,
+        {},
+        false
+      );
+    } catch (error) {
+      if (error instanceof APIError && error.status === 404) {
+        return null;
+      }
+      throw error;
+    }
+  },
+
+  async updatePollResponse(responseId: number, pollAnswerId: number): Promise<PollStat> {
+    return makeApiCall<PollStat>(`${API_BASE_URL}/api/poll-stats/${responseId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ pollAnswerId }),
+    }, false); // Works for both authenticated and unauthenticated users
   },
 
   async getUserStats(): Promise<{

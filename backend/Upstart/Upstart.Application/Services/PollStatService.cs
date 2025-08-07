@@ -45,13 +45,21 @@ public class PollStatService : IPollStatService
             throw new InvalidOperationException($"Poll '{request.PollId}' requires authentication.");
         }
 
-        // Check if user has already responded to this poll (only for authenticated users)
+        // Check if user has already responded to this poll
         if (request.UserId.HasValue && request.UserId > 0)
         {
             var existingResponse = await _pollStatsRepository.GetUserResponseAsync(request.PollId, request.UserId.Value);
             if (existingResponse != null)
             {
-                throw new InvalidOperationException($"User '{request.UserId}' has already responded to poll '{request.PollId}'.");
+                throw new InvalidOperationException($"User '{request.UserId}' has already responded to poll '{request.PollId}'. Use update endpoint to change your answer.");
+            }
+        }
+        else if (!string.IsNullOrEmpty(request.SessionId))
+        {
+            var existingResponse = await _pollStatsRepository.GetSessionResponseAsync(request.PollId, request.SessionId);
+            if (existingResponse != null)
+            {
+                throw new InvalidOperationException($"Session '{request.SessionId}' has already responded to poll '{request.PollId}'. Use update endpoint to change your answer.");
             }
         }
 
@@ -60,6 +68,7 @@ public class PollStatService : IPollStatService
             PollId = request.PollId,
             PollAnswerId = request.PollAnswerId,
             UserId = request.UserId,
+            SessionId = request.SessionId,
             SelectedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc)
         };
 
@@ -86,6 +95,43 @@ public class PollStatService : IPollStatService
         return await _pollStatsRepository.GetUserResponseAsync(pollId, userId);
     }
 
+    public async Task<PollStatModel?> GetSessionPollResponseAsync(int pollId, string sessionId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Looking for session response for poll ID: {PollId}, session ID: {SessionId}", pollId, sessionId);
+        var result = await _pollStatsRepository.GetSessionResponseAsync(pollId, sessionId);
+        _logger.LogDebug("Session response result: {Found}", result != null ? "Found" : "Not found");
+        return result;
+    }
+
+    public async Task<PollStatModel> UpdatePollStatAsync(UpdatePollStatRequest request, int? userId, string? sessionId, CancellationToken cancellationToken = default)
+    {
+        _logger.LogDebug("Updating poll stat with ID: {PollStatId}", request.Id);
+
+        // Get the existing poll stat to verify ownership
+        var existingStat = await _pollStatsRepository.GetByIdAsync(request.Id);
+        if (existingStat == null)
+        {
+            throw new InvalidOperationException($"Poll response with ID '{request.Id}' not found.");
+        }
+
+        // Verify ownership - user can only update their own responses
+        if (userId.HasValue && existingStat.UserId != userId)
+        {
+            throw new UnauthorizedAccessException($"User {userId} is not authorized to update this poll response.");
+        }
+        
+        if (!userId.HasValue && existingStat.SessionId != sessionId)
+        {
+            throw new UnauthorizedAccessException($"Session {sessionId} is not authorized to update this poll response.");
+        }
+
+        // Update the response
+        existingStat.PollAnswerId = request.PollAnswerId;
+        existingStat.SelectedAt = DateTime.SpecifyKind(DateTime.UtcNow, DateTimeKind.Utc);
+
+        return await _pollStatsRepository.UpdateAsync(existingStat);
+    }
+
     public async Task<IEnumerable<PollStatModel>> GetPollResultsAsync(int pollId, CancellationToken cancellationToken = default)
     {
         return await _pollStatsRepository.GetPollResultsAsync(pollId);
@@ -101,5 +147,11 @@ public class PollStatService : IPollStatService
 public record CreatePollStatRequest(
     int PollId,
     int PollAnswerId,
-    int? UserId
+    int? UserId,
+    string? SessionId = null
+);
+
+public record UpdatePollStatRequest(
+    int Id,
+    int PollAnswerId
 );
