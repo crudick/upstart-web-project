@@ -119,14 +119,14 @@ erDiagram
 UpPoll provides a comprehensive RESTful API with full OpenAPI 3.0 specification.
 
 ### 📚 **Interactive API Documentation**
-**🔗 [View Live API Documentation](https://crudick.github.io/upstart-web-project/)**
+**🔗 [View API Documentation](https://github.com/crudick/upstart-web-project/blob/main/docs/api-docs.html)**
 
 The API documentation is built with Redoc and provides:
-- Interactive endpoint testing
+- Complete endpoint reference
 - Request/response examples
 - Authentication flows
 - Schema definitions
-- Real-time validation
+- Professional styling
 
 ### API Overview
 
@@ -530,35 +530,34 @@ docker-compose up --build
 
 ### Docker Production Deployment
 
-#### Multi-stage Docker Build
-```dockerfile
-# Optimized for production
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
-WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "Upstart.Api.dll"]
+The application includes optimized Dockerfiles for both backend and frontend services.
+
+#### Backend Container
+```bash
+# Build from the backend directory
+cd backend/Upstart
+docker build -t uppoll-api .
+docker run -p 5000:5000 -e ConnectionStrings__DefaultConnection="your-db-connection" uppoll-api
 ```
 
-#### Production Compose Configuration
-```yaml
-version: '3.8'
-services:
-  api:
-    build: .
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ASPNETCORE_URLS=http://+:80
-    ports:
-      - "80:80"
-    depends_on:
-      - postgres
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+The backend Dockerfile uses multi-stage builds:
+- Build stage: .NET 8 SDK for compilation
+- Runtime stage: .NET 8 ASP.NET runtime (smaller footprint)
+- Exposes port 5000
+
+#### Frontend Container  
+```bash
+# Build from the frontend directory
+cd frontend
+docker build -t uppoll-frontend --build-arg REACT_APP_API_URL=https://your-api-url .
+docker run -p 80:80 uppoll-frontend
 ```
+
+The frontend Dockerfile:
+- Build stage: Node.js 18 Alpine for React compilation
+- Runtime stage: Nginx Alpine for static file serving
+- Accepts `REACT_APP_API_URL` build argument
+- Serves on port 80
 
 #### Container Orchestration
 - **Kubernetes manifests** for production orchestration
